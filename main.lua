@@ -10,6 +10,12 @@ local backroundSprite = nil
 
 --Fish
 local codSprite = nil
+local nemoSprite = nil
+local epicSprite = nil
+local octopusSprite = nil
+local anglerSprite = nil
+local insaneSprite = nil
+local unknownSprite = nil
 
 -- variables for crank pos
 local crankChange = 0
@@ -17,12 +23,12 @@ local isDocked = true
 
 -- fish raritys
 Fishys = {
-	Cod = { probability = 40 / 100 }, --Common
-	Nemo = { probability = 25 / 100 }, --Rare
+	Cod = { probability = 50 / 100 }, --Common
+	Nemo = { probability = 20 / 100 }, --Rare
 	Epic = { probability = 15 / 100 }, --Epic
-	Octopus = { probability = 10 / 100 }, --Legendary
-	Angler = { probability = 6 / 100 }, --Mythical
-	Insane = { probability = 3 / 100 }, --Insane
+	Octopus = { probability = 8 / 100 }, --Legendary
+	Angler = { probability = 4 / 100 }, --Mythical
+	Insane = { probability = 2 / 100 }, --Insane
 	Unknown = { probability = 1 / 100 }, --Unknown
 }
 
@@ -42,7 +48,13 @@ function setupGame()
 	local backround = gfx.image.new("assets/FishyFishyUnderwater")
 	local fishingHook = gfx.image.new("assets/fishhook2")
 
-	local cod = gfx.image.new("assets/Fish/Common-Cod")
+	local Cod = gfx.image.new("assets/Fish/Common-Cod")
+	local Nemo = gfx.image.new("assets/Fish/Rare-Nemo")
+	local Epic = gfx.image.new("assets/Fish/Epic-")
+	local Octopus = gfx.image.new("assets/Fish/Legendary-Octopus")
+	local Angler = gfx.image.new("assets/Fish/Mythical-Angler")
+	local Insane = gfx.image.new("assets/Fish/Insane-")
+	local Unknown = gfx.image.new("assets/Fish/Unknown-")
 
 	-- Check if images loaded
 	if not fishingHook or not backround then
@@ -54,15 +66,32 @@ function setupGame()
 	fishingHookSprite = spr.new(fishingHook)
 	backroundSprite = spr.new(backround)
 
-	codSprite = spr.new(cod)
+	codSprite = spr.new(Cod)
+
 
 	-- Position sprites
 	fishingHookSprite:moveTo(200, 50)
 	backroundSprite:moveTo(200, 1200)
+    codSprite:moveTo(200,140)
 
 	-- Add sprites to display list (makes them visible)
 	fishingHookSprite:add()
 	backroundSprite:add()
+
+    local fishCount = 0
+    if fishCount <= 5 then
+        local fish = getRandomFish()
+        print(fish)
+        if fish == "Cod" then
+            codSprite:add()
+        elseif fish == "Nemo" then
+        elseif fish == "Epic" then
+        elseif fish == "Octopus" then
+        elseif fish == "Angler" then
+        elseif fish == "Insane" then
+        elseif fish == "Unknown" then
+        end
+    end
 	print("all sprites loaded")
 end
 
