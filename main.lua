@@ -9,6 +9,7 @@ local fishingHookSprite = nil
 local backroundSprite = nil
 
 --Fish
+local fishSprite = nil
 local codSprite = nil
 local nemoSprite = nil
 local epicSprite = nil
@@ -23,13 +24,13 @@ local isDocked = true
 
 -- fish raritys
 Fishys = {
-	Cod = { probability = 50 / 100 }, --Common
-	Nemo = { probability = 20 / 100 }, --Rare
-	Epic = { probability = 15 / 100 }, --Epic
-	Octopus = { probability = 8 / 100 }, --Legendary
-	Angler = { probability = 4 / 100 }, --Mythical
-	Insane = { probability = 2 / 100 }, --Insane
-	Unknown = { probability = 1 / 100 }, --Unknown
+	Cod = { probability = 50 / 100, imgPath = "assets/Fish/Common-Cod" }, --Common
+	Nemo = { probability = 20 / 100, imgPath = "assets/Fish/Common-Cod" }, --Rare
+	Epic = { probability = 15 / 100, imgPath = "assets/Fish/Common-Cod" }, --Epic
+	Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Common-Cod" }, --Legendary
+	Angler = { probability = 4 / 100, imgPath = "assets/Fish/Common-Cod" }, --Mythical
+	Insane = { probability = 2 / 100, imgPath = "assets/Fish/Common-Cod" }, --Insane
+	Unknown = { probability = 1 / 100, imgPath = "assets/Fish/Common-Cod" }, --Unknown
 }
 
 function getRandomFish()
@@ -40,6 +41,23 @@ function getRandomFish()
 		if chance <= total then
 			return fish
 		end
+	end
+end
+
+local spawnedFish = {}
+
+function spawnFish(count)
+	for num = 1, count do
+		local fishName = getRandomFish()
+		print(fishName)
+		local fishData = Fishys[fishName]
+		local fishImg = gfx.image.new(fishData.imgPath)
+		fishSprite = spr.new(fishImg)
+		local rndmX = math.random(25, 375)
+		local rndmY = math.random(120, 1150)
+		fishSprite:moveTo(rndmX, rndmY)
+		fishSprite:add()
+		print("Fish spawned")
 	end
 end
 
@@ -66,32 +84,29 @@ function setupGame()
 	fishingHookSprite = spr.new(fishingHook)
 	backroundSprite = spr.new(backround)
 
-	codSprite = spr.new(Cod)
-
-
 	-- Position sprites
 	fishingHookSprite:moveTo(200, 50)
 	backroundSprite:moveTo(200, 1200)
-    codSprite:moveTo(200,140)
 
 	-- Add sprites to display list (makes them visible)
 	fishingHookSprite:add()
 	backroundSprite:add()
 
-    local fishCount = 0
-    if fishCount <= 5 then
-        local fish = getRandomFish()
-        print(fish)
-        if fish == "Cod" then
-            codSprite:add()
-        elseif fish == "Nemo" then
-        elseif fish == "Epic" then
-        elseif fish == "Octopus" then
-        elseif fish == "Angler" then
-        elseif fish == "Insane" then
-        elseif fish == "Unknown" then
-        end
-    end
+	local fishCount = 0
+	if fishCount <= 5 then
+		local fish = getRandomFish()
+		print(fish)
+		if fish == "Cod" then
+		elseif fish == "Nemo" then
+		elseif fish == "Epic" then
+		elseif fish == "Octopus" then
+		elseif fish == "Angler" then
+		elseif fish == "Insane" then
+		elseif fish == "Unknown" then
+		end
+	end
+
+	spawnFish(5)
 	print("all sprites loaded")
 end
 
