@@ -25,13 +25,15 @@ local isDocked = true
 -- fish raritys
 Fishys = {
 	Cod = { probability = 50 / 100, imgPath = "assets/Fish/Common-Cod" }, --Common
-	Nemo = { probability = 20 / 100, imgPath = "assets/Fish/Common-Cod" }, --Rare
-	Epic = { probability = 15 / 100, imgPath = "assets/Fish/Common-Cod" }, --Epic
-	Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Common-Cod" }, --Legendary
-	Angler = { probability = 4 / 100, imgPath = "assets/Fish/Common-Cod" }, --Mythical
-	Insane = { probability = 2 / 100, imgPath = "assets/Fish/Common-Cod" }, --Insane
-	Unknown = { probability = 1 / 100, imgPath = "assets/Fish/Common-Cod" }, --Unknown
+	Nemo = { probability = 20 / 100, imgPath = "assets/Fish/Rare-Nemo" }, --Rare
+	Pufferfish = { probability = 15 / 100, imgPath = "assets/Fish/Epic-Pufferfish" }, --Epic
+	Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Legendary-Octopus" }, --Legendary
+	Angler = { probability = 4 / 100, imgPath = "assets/Fish/Mythical-Angler" }, --Mythical
+	Jellyfish = { probability = 2 / 100, imgPath = "assets/Fish/Insane-Jellyfish" }, --Insane
+	Shark = { probability = 1 / 100, imgPath = "assets/Fish/Unknown-Shark" }, --Unknown
 }
+
+local spawnedFish = {}
 
 function getRandomFish()
 	local chance = math.random()
@@ -44,20 +46,17 @@ function getRandomFish()
 	end
 end
 
-local spawnedFish = {}
-
 function spawnFish(count)
 	for num = 1, count do
 		local fishName = getRandomFish()
-		print(fishName)
 		local fishData = Fishys[fishName]
 		local fishImg = gfx.image.new(fishData.imgPath)
 		fishSprite = spr.new(fishImg)
-		local rndmX = math.random(25, 375)
-		local rndmY = math.random(120, 1150)
+		local rndmX = math.random(50, 350)
+		local rndmY = math.random(220, 2350)
 		fishSprite:moveTo(rndmX, rndmY)
 		fishSprite:add()
-		print("Fish spawned")
+		table.insert(spawnedFish, fishSprite)
 	end
 end
 
@@ -65,14 +64,6 @@ function setupGame()
 	-- Load images
 	local backround = gfx.image.new("assets/FishyFishyUnderwater")
 	local fishingHook = gfx.image.new("assets/fishhook2")
-
-	local Cod = gfx.image.new("assets/Fish/Common-Cod")
-	local Nemo = gfx.image.new("assets/Fish/Rare-Nemo")
-	local Epic = gfx.image.new("assets/Fish/Epic-")
-	local Octopus = gfx.image.new("assets/Fish/Legendary-Octopus")
-	local Angler = gfx.image.new("assets/Fish/Mythical-Angler")
-	local Insane = gfx.image.new("assets/Fish/Insane-")
-	local Unknown = gfx.image.new("assets/Fish/Unknown-")
 
 	-- Check if images loaded
 	if not fishingHook or not backround then
@@ -92,21 +83,9 @@ function setupGame()
 	fishingHookSprite:add()
 	backroundSprite:add()
 
-	local fishCount = 0
-	if fishCount <= 5 then
-		local fish = getRandomFish()
-		print(fish)
-		if fish == "Cod" then
-		elseif fish == "Nemo" then
-		elseif fish == "Epic" then
-		elseif fish == "Octopus" then
-		elseif fish == "Angler" then
-		elseif fish == "Insane" then
-		elseif fish == "Unknown" then
-		end
-	end
-
-	spawnFish(5)
+	local randomFishcount = math.random(10, 20)
+	spawnFish(randomFishcount)
+	print("Spawned: " .. randomFishcount .. " fish")
 	print("all sprites loaded")
 end
 
@@ -114,7 +93,7 @@ function playdate.update()
 	-- Clear screen
 	gfx.clear()
 
-	-- Move player with arrow keys
+	-- Move hook with arrow keys
 	if playdate.buttonIsPressed(playdate.kButtonRight) then
 		fishingHookSprite:moveBy(5, 0)
 	elseif playdate.buttonIsPressed(playdate.kButtonLeft) then
@@ -133,13 +112,48 @@ function playdate.update()
 	local reeling = crankChange / 2
 
 	-- scroll backround with crank
-	backroundSprite:moveBy(0, -2)
-	backroundSprite:moveBy(0, reeling)
+	backroundSprite:moveBy(0, -2 + reeling)
 
+
+	--limits scrolling backround too far and moves fish with backround
 	if backroundSprite.y >= 1200 then
 		backroundSprite:moveTo(200, 1199)
+		for _, fish in pairs(spawnedFish) do
+			fish:moveBy(0, -2 + reeling)
+
+			local randomSpeed = math.random(1,4)
+			local currentPosX = fish.x
+			if currentPosX > 350 or currentPosX < 50 then
+				randomSpeed = -randomSpeed
+			end
+			fish:moveBy(randomSpeed, 0)
+			
+		end
 	elseif backroundSprite.y <= -960 then
 		backroundSprite:moveTo(200, -959)
+		for _, fish in pairs(spawnedFish) do
+			fish:moveBy(0, -2 + reeling)
+
+			local randomSpeed = math.random(1,4)
+			local currentPosX = fish.x
+			if currentPosX > 350 or currentPosX < 50 then
+				randomSpeed = -randomSpeed
+			end
+			fish:moveBy(randomSpeed, 0)
+			
+		end
+	else
+		for _, fish in pairs(spawnedFish) do
+			fish:moveBy(0, -2 + reeling)
+
+			local randomSpeed = math.random(1,4)
+			local currentPosX = fish.x
+			if currentPosX > 350 or currentPosX < 50 then
+				randomSpeed = -randomSpeed
+			end
+			fish:moveBy(randomSpeed, 0)
+
+		end
 	end
 
 	-- Update all sprites
