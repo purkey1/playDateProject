@@ -10,17 +10,9 @@ local backroundSprite = nil
 
 --Fish
 local fishSprite = nil
-local codSprite = nil
-local nemoSprite = nil
-local epicSprite = nil
-local octopusSprite = nil
-local anglerSprite = nil
-local insaneSprite = nil
-local unknownSprite = nil
 
 -- variables for crank pos
 local crankChange = 0
-local isDocked = true
 
 -- fish raritys
 Fishys = {
@@ -84,7 +76,7 @@ function setupGame()
 	backroundSprite:add()
 
 	local randomFishcount = math.random(10, 20)
-	spawnFish(randomFishcount)
+	spawnFish(1)
 	print("Spawned: " .. randomFishcount .. " fish")
 	print("all sprites loaded")
 end
@@ -121,7 +113,7 @@ function playdate.update()
 		for _, fish in pairs(spawnedFish) do
 			fish:moveBy(0, -2 + reeling)
 
-			local randomSpeed = math.random(1,4)
+			local randomSpeed = math.random(1, 4)
 			local currentPosX = fish.x
 			if currentPosX > 350 or currentPosX < 50 then
 				randomSpeed = -randomSpeed
@@ -134,7 +126,7 @@ function playdate.update()
 		for _, fish in pairs(spawnedFish) do
 			fish:moveBy(0, -2 + reeling)
 
-			local randomSpeed = math.random(1,4)
+			local randomSpeed = math.random(1, 4)
 			local currentPosX = fish.x
 			if currentPosX > 350 or currentPosX < 50 then
 				randomSpeed = -randomSpeed
@@ -146,12 +138,18 @@ function playdate.update()
 		for _, fish in pairs(spawnedFish) do
 			fish:moveBy(0, -2 + reeling)
 
-			local randomSpeed = math.random(1,4)
-			local currentPosX = fish.x
-			if currentPosX > 350 or currentPosX < 50 then
-				randomSpeed = -randomSpeed
+			local speed = 2
+        	local x = fish.x
+			print(x)
+
+        	if x < 50 then
+        	    speed = 2
+			elseif x > 350 then
+				speed = -2
+			else
+				speed = speed
 			end
-			fish:moveBy(randomSpeed, 0)
+			fish:moveBy(speed, 0)
 
 		end
 	end
