@@ -47,6 +47,12 @@ function spawnFish(count)
 		local rndmX = math.random(50, 350)
 		local rndmY = math.random(220, 2350)
 		fishSprite:moveTo(rndmX, rndmY)
+		
+		fishSprite.speedX = math.random(1, 3)
+		local direction = math.random()
+		if direction > 0.5 then
+			fishSprite.speedX = -fishSprite.speedX
+		end
 		fishSprite:add()
 		table.insert(spawnedFish, fishSprite)
 	end
@@ -76,7 +82,7 @@ function setupGame()
 	backroundSprite:add()
 
 	local randomFishcount = math.random(10, 20)
-	spawnFish(1)
+	spawnFish(randomFishcount)
 	print("Spawned: " .. randomFishcount .. " fish")
 	print("all sprites loaded")
 end
@@ -104,52 +110,41 @@ function playdate.update()
 	local reeling = crankChange / 2
 
 	-- scroll backround with crank
+	local bgY1 = backroundSprite.y
 	backroundSprite:moveBy(0, -2 + reeling)
+	local bgY2 = backroundSprite.y - bgY1
+	
 
 
 	--limits scrolling backround too far and moves fish with backround
 	if backroundSprite.y >= 1200 then
 		backroundSprite:moveTo(200, 1199)
 		for _, fish in pairs(spawnedFish) do
-			fish:moveBy(0, -2 + reeling)
+			fish:moveTo(fish.x, 1199)
 
-			local randomSpeed = math.random(1, 4)
-			local currentPosX = fish.x
-			if currentPosX > 350 or currentPosX < 50 then
-				randomSpeed = -randomSpeed
+			fish:moveBy(fish.speedX, 0)
+			if fish.x > 350 or fish.x < 50 then
+				fish.speedX = -fish.speedX
 			end
-			fish:moveBy(randomSpeed, 0)
-			
 		end
 	elseif backroundSprite.y <= -960 then
 		backroundSprite:moveTo(200, -959)
 		for _, fish in pairs(spawnedFish) do
-			fish:moveBy(0, -2 + reeling)
+			fish:moveTo(fish.x, -959)
 
-			local randomSpeed = math.random(1, 4)
-			local currentPosX = fish.x
-			if currentPosX > 350 or currentPosX < 50 then
-				randomSpeed = -randomSpeed
+			fish:moveBy(fish.speedX, 0)
+			if fish.x > 350 or fish.x < 50 then
+				fish.speedX = -fish.speedX
 			end
-			fish:moveBy(randomSpeed, 0)
-			
 		end
 	else
 		for _, fish in pairs(spawnedFish) do
-			fish:moveBy(0, -2 + reeling)
+			fish:moveBy(0, bgY2)
 
-			local speed = 2
-        	local x = fish.x
-			print(x)
-
-        	if x < 50 then
-        	    speed = 2
-			elseif x > 350 then
-				speed = -2
-			else
-				speed = speed
+			fish:moveBy(fish.speedX, 0)
+			if fish.x > 350 or fish.x < 50 then
+				fish.speedX = -fish.speedX
 			end
-			fish:moveBy(speed, 0)
 
 		end
 	end
