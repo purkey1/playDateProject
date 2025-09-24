@@ -40,21 +40,28 @@ end
 
 function spawnFish(count)
 	for num = 1, count do
+		--get fish info
 		local fishName = getRandomFish()
 		local fishData = Fishys[fishName]
 		local fishImg = gfx.image.new(fishData.imgPath)
 		fishSprite = spr.new(fishImg)
+		--add collission
+		fishSprite:setCollideRect(0, 0, fishSprite:getSize())
+		--move to random spawn point
 		local rndmX = math.random(50, 350)
 		local rndmY = math.random(220, 2350)
 		fishSprite:moveTo(rndmX, rndmY)
-		
+		--give random speed
 		fishSprite.speedX = math.random(1, 3)
+		--flip the image to make it face the correct way
 		fishSprite:setImageFlip(gfx.kImageFlippedX)
+		--coinflip fish direction
 		local direction = math.random()
 		if direction > 0.5 then
 			fishSprite.speedX = -fishSprite.speedX
 			fishSprite:setImageFlip(gfx.kImageUnflipped)
 		end
+
 		fishSprite:add()
 		table.insert(spawnedFish, fishSprite)
 	end
@@ -73,6 +80,8 @@ function setupGame()
 
 	-- Create sprites from images
 	fishingHookSprite = spr.new(fishingHook)
+	local width, height = fishingHookSprite:getSize()
+	fishingHookSprite:setCollideRect(0, 190, width, 50)
 	backroundSprite = spr.new(backround)
 
 	-- Position sprites
@@ -123,6 +132,7 @@ function playdate.update()
 		backroundSprite:moveTo(200, 1199)
 		for _, fish in pairs(spawnedFish) do
 
+			-- Fish swimming left and right with facing the correct direction
 			fish:moveBy(fish.speedX, 0)
 			if fish.x > 350 then
 				fish.speedX = -fish.speedX
@@ -136,6 +146,7 @@ function playdate.update()
 		backroundSprite:moveTo(200, -959)
 		for _, fish in pairs(spawnedFish) do
 
+			-- Fish swimming left and right with facing the correct direction
 			fish:moveBy(fish.speedX, 0)
 			if fish.x > 350 then
 				fish.speedX = -fish.speedX
@@ -147,8 +158,10 @@ function playdate.update()
 		end
 	else
 		for _, fish in pairs(spawnedFish) do
+			--Keep fish with backroundSprite
 			fish:moveBy(0, bgY2)
 
+			-- Fish swimming left and right with facing the correct direction
 			fish:moveBy(fish.speedX, 0)
 			if fish.x > 350 then
 				fish.speedX = -fish.speedX
@@ -158,12 +171,16 @@ function playdate.update()
 				fish:setImageFlip(gfx.kImageFlippedX)
 			end
 
+			--Check for collission with fishingHookSprite
+			local overlaps = fish:overlappingSprites()
+			print(overlaps)
+			
+
 		end
 	end
 
 	-- Update all sprites
 	gfx.sprite.update()
 end
-
 -- Start the game
 setupGame()
