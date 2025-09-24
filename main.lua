@@ -49,9 +49,11 @@ function spawnFish(count)
 		fishSprite:moveTo(rndmX, rndmY)
 		
 		fishSprite.speedX = math.random(1, 3)
+		fishSprite:setImageFlip(gfx.kImageFlippedX)
 		local direction = math.random()
 		if direction > 0.5 then
 			fishSprite.speedX = -fishSprite.speedX
+			fishSprite:setImageFlip(gfx.kImageUnflipped)
 		end
 		fishSprite:add()
 		table.insert(spawnedFish, fishSprite)
@@ -120,21 +122,27 @@ function playdate.update()
 	if backroundSprite.y >= 1200 then
 		backroundSprite:moveTo(200, 1199)
 		for _, fish in pairs(spawnedFish) do
-			fish:moveTo(fish.x, 1199)
 
 			fish:moveBy(fish.speedX, 0)
-			if fish.x > 350 or fish.x < 50 then
+			if fish.x > 350 then
 				fish.speedX = -fish.speedX
+				fish:setImageFlip(gfx.kImageUnflipped)
+			elseif fish.x < 50 then
+				fish.speedX = -fish.speedX
+				fish:setImageFlip(gfx.kImageFlippedX)
 			end
 		end
 	elseif backroundSprite.y <= -960 then
 		backroundSprite:moveTo(200, -959)
 		for _, fish in pairs(spawnedFish) do
-			fish:moveTo(fish.x, -959)
 
 			fish:moveBy(fish.speedX, 0)
-			if fish.x > 350 or fish.x < 50 then
+			if fish.x > 350 then
 				fish.speedX = -fish.speedX
+				fish:setImageFlip(gfx.kImageUnflipped)
+			elseif fish.x < 50 then
+				fish.speedX = -fish.speedX
+				fish:setImageFlip(gfx.kImageFlippedX)
 			end
 		end
 	else
@@ -142,8 +150,12 @@ function playdate.update()
 			fish:moveBy(0, bgY2)
 
 			fish:moveBy(fish.speedX, 0)
-			if fish.x > 350 or fish.x < 50 then
+			if fish.x > 350 then
 				fish.speedX = -fish.speedX
+				fish:setImageFlip(gfx.kImageUnflipped)
+			elseif fish.x < 50 then
+				fish.speedX = -fish.speedX
+				fish:setImageFlip(gfx.kImageFlippedX)
 			end
 
 		end
