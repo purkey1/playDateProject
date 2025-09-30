@@ -13,6 +13,7 @@ local fishSprite = nil
 
 -- variables for crank pos
 local crankChange = 0
+local currentRotation = 90
 
 -- fish raritys
 Fishys = {
@@ -47,10 +48,13 @@ function spawnFish(count)
 		fishSprite = spr.new(fishImg)
 		--add collission
 		fishSprite:setCollideRect(0, 0, fishSprite:getSize())
+		fishSprite.collisionResponse = spr.kCollisionTypeOverlap
+		fishSprite:setGroups(2)
+		fishSprite:setCollidesWithGroups(1)
 		--move to random spawn point
 		local rndmX = math.random(50, 350)
 		local rndmY = math.random(220, 2350)
-		fishSprite:moveTo(rndmX, rndmY)
+		fishSprite:moveWithCollisions(rndmX, rndmY)
 		--give random speed
 		fishSprite.speedX = math.random(1, 3)
 		--flip the image to make it face the correct way
@@ -64,6 +68,24 @@ function spawnFish(count)
 
 		fishSprite:add()
 		table.insert(spawnedFish, fishSprite)
+	end
+end
+
+function collissionCheck()
+    for _, fish in pairs(spawnedFish) do
+		local overlappingSprites = spr.allOverlappingSprites()
+		if #overlappingSprites == 0 then
+			print("fish off")
+		else
+			print("fish on")
+			fish:setRotation(currentRotation)
+			for i = 0, 10, 1 do
+				currentRotation = currentRotation + 1
+				local width, height = fish:getSize()
+				--fish:setCenter(width/2, height/2)
+				fish:setRotation(currentRotation)
+			end
+		end
 	end
 end
 
@@ -82,10 +104,13 @@ function setupGame()
 	fishingHookSprite = spr.new(fishingHook)
 	local width, height = fishingHookSprite:getSize()
 	fishingHookSprite:setCollideRect(0, 190, width, 50)
+	fishingHookSprite.collisionResponse = spr.kCollisionTypeOverlap
+	fishingHookSprite:setGroups(1)
+	fishingHookSprite:setCollidesWithGroups(2)
 	backroundSprite = spr.new(backround)
 
 	-- Position sprites
-	fishingHookSprite:moveTo(200, 50)
+	fishingHookSprite:moveWithCollisions(200, 50)
 	backroundSprite:moveTo(200, 1200)
 
 	-- Add sprites to display list (makes them visible)
@@ -104,17 +129,20 @@ function playdate.update()
 
 	-- Move hook with arrow keys
 	if playdate.buttonIsPressed(playdate.kButtonRight) then
-		fishingHookSprite:moveBy(5, 0)
+		fishingHookSprite:moveWithCollisions(fishingHookSprite.x + 5, 50)
 	elseif playdate.buttonIsPressed(playdate.kButtonLeft) then
-		fishingHookSprite:moveBy(-5, 0)
+		fishingHookSprite:moveWithCollisions(fishingHookSprite.x - 5, 50)
 	end
 
 	--Limits hook going off screen
 	if fishingHookSprite.x >= 375 then
-		fishingHookSprite:moveTo(374, 50)
+		fishingHookSprite:moveWithCollisions(374, 50)
 	elseif fishingHookSprite.x <= 25 then
-		fishingHookSprite:moveTo(26, 50)
+		fishingHookSprite:moveWithCollisions(26, 50)
 	end
+
+	--Check for collission with fishingHookSprite
+	collissionCheck()
 
 	--get crank pos
 	crankChange = playdate.getCrankChange()
@@ -170,12 +198,6 @@ function playdate.update()
 				fish.speedX = -fish.speedX
 				fish:setImageFlip(gfx.kImageFlippedX)
 			end
-
-			--Check for collission with fishingHookSprite
-			local overlaps = fish:overlappingSprites()
-			print(overlaps)
-			
-
 		end
 	end
 
