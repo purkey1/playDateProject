@@ -10,6 +10,7 @@ local backroundSprite = nil
 
 --Fish
 local fishSprite = nil
+local fishHooked = nil
 
 -- variables for crank pos
 local crankChange = 0
@@ -23,7 +24,8 @@ Fishys = {
 	Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Legendary-Octopus" }, --Legendary
 	Angler = { probability = 4 / 100, imgPath = "assets/Fish/Mythical-Angler" }, --Mythical
 	Jellyfish = { probability = 2 / 100, imgPath = "assets/Fish/Insane-Jellyfish" }, --Insane
-	Shark = { probability = 1 / 100, imgPath = "assets/Fish/Unknown-Shark" }, --Unknown
+	Shark = { probability = 10000 / 1000000, imgPath = "assets/Fish/Unknown-Shark" }, --Unknown
+	SpongeBOB = { probability = 1 / 1000000, imgPath = "assets/Fish/Unknown-Shark" }, --Unknown
 }
 
 local spawnedFish = {}
@@ -67,23 +69,26 @@ function spawnFish(count)
 		end
 
 		fishSprite:add()
+		print(fishName)
 		table.insert(spawnedFish, fishSprite)
 	end
 end
 
 function collissionCheck()
+	if fishHooked then
+		return
+	end
     for _, fish in pairs(spawnedFish) do
-		local overlappingSprites = spr.allOverlappingSprites()
-		if #overlappingSprites == 0 then
-			print("fish off")
-		else
+		--local overlappingSprites = spr.allOverlappingSprites()
+		local overlappingSprites = fish:overlappingSprites()
+		
+		if #overlappingSprites >= 1 then
 			print("fish on")
-			fish:setRotation(currentRotation)
-			for i = 0, 10, 1 do
-				currentRotation = currentRotation + 1
-				local width, height = fish:getSize()
-				--fish:setCenter(width/2, height/2)
-				fish:setRotation(currentRotation)
+			fishHooked = fish
+			fish.speedX = 0
+			print(fish)
+			if fish == Fishys.Cod  then
+				fish:setRotation(90)
 			end
 		end
 	end
@@ -103,7 +108,7 @@ function setupGame()
 	-- Create sprites from images
 	fishingHookSprite = spr.new(fishingHook)
 	local width, height = fishingHookSprite:getSize()
-	fishingHookSprite:setCollideRect(0, 190, width, 50)
+	fishingHookSprite:setCollideRect(2.5, 187.5, width-5, 50)
 	fishingHookSprite.collisionResponse = spr.kCollisionTypeOverlap
 	fishingHookSprite:setGroups(1)
 	fishingHookSprite:setCollidesWithGroups(2)
@@ -143,7 +148,10 @@ function playdate.update()
 
 	--Check for collission with fishingHookSprite
 	collissionCheck()
-
+	local width, height = fishingHookSprite:getSize()
+	if fishHooked then
+		fishHooked:moveWithCollisions(fishingHookSprite.x, 187.5)
+	end
 	--get crank pos
 	crankChange = playdate.getCrankChange()
 	local reeling = crankChange / 2
