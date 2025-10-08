@@ -3,6 +3,7 @@ import("CoreLibs/sprites")
 
 local gfx = playdate.graphics
 local spr = gfx.sprite
+local sound = playdate.sound
 
 -- Variables for our sprites
 local fishingHookSprite = nil
@@ -96,11 +97,15 @@ function setupGame()
 	if aboveWater == true then
 		local aboveWaterBackround = gfx.image.new("assets/FishyFishyAbovewater")
 	end
-	
+
 	if underWater == true then
 		-- Load images
 		local underWaterBackround = gfx.image.new("assets/FishyFishyUnderwater")
 		local fishingHook = gfx.image.new("assets/fishhook2")
+
+		-- load and play music
+		local underwaterMusic = sound.fileplayer.new("assets/Audio/underwaterMusic")
+		underwaterMusic:play()
 
 		-- Create sprites from images
 		fishingHookSprite = spr.new(fishingHook)
