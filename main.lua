@@ -86,10 +86,7 @@ function collissionCheck()
 			print("fish on")
 			fishHooked = fish
 			fish.speedX = 0
-			print(fish)
-			if fish == Fishys.Cod  then
-				fish:setRotation(90)
-			end
+			fish:setRotation(90)
 		end
 	end
 end
