@@ -27,14 +27,14 @@ local balance = 0
 
 -- fish raritys
 Fishys = {
-	Cod = { probability = 50 / 100, imgPath = "assets/Fish/Common-Cod", priceMin = "1", priceMax = "7" }, --Common
-	Nemo = { probability = 20 / 100, imgPath = "assets/Fish/Rare-Nemo" }, --Rare
-	Pufferfish = { probability = 15 / 100, imgPath = "assets/Fish/Epic-Pufferfish" }, --Epic
-	Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Legendary-Octopus" }, --Legendary
-	Angler = { probability = 4 / 100, imgPath = "assets/Fish/Mythical-Angler" }, --Mythical
-	Jellyfish = { probability = 2 / 100, imgPath = "assets/Fish/Insane-Jellyfish" }, --Insane
-	Shark = { probability = 10000 / 1000000, imgPath = "assets/Fish/Unknown-Shark" }, --Unknown
-	SpongeBOB = { probability = 1 / 1000000, imgPath = "assets/Fish/Unknown-Shark" }, --Unknown
+	Cod = { probability = 50 / 100, imgPath = "assets/Fish/Common-Cod", priceMin = "1", priceMax = "6" }, --Common
+	Nemo = { probability = 20 / 100, imgPath = "assets/Fish/Rare-Nemo", priceMin = "4", priceMax = "12" }, --Rare
+	Pufferfish = { probability = 15 / 100, imgPath = "assets/Fish/Epic-Pufferfish", priceMin = "10", priceMax = "18" }, --Epic
+	Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Legendary-Octopus", priceMin = "16", priceMax = "25" }, --Legendary
+	Angler = { probability = 4 / 100, imgPath = "assets/Fish/Mythical-Angler", priceMin = "23", priceMax = "31" }, --Mythical
+	Jellyfish = { probability = 2 / 100, imgPath = "assets/Fish/Insane-Jellyfish", priceMin = "29", priceMax = "37" }, --Insane
+	Shark = { probability = 10000 / 1000000, imgPath = "assets/Fish/Unknown-Shark", priceMin = "35", priceMax = "43" }, --Unknown
+	SpongeBOB = { probability = 1 / 1000000, imgPath = "assets/Fish/Unknown-Shark", priceMin = "100000", priceMax = "1000000" }, --Unknown
 }
 
 local spawnedFish = {}
@@ -57,6 +57,7 @@ function spawnFish(count)
 		local fishData = Fishys[fishName]
 		local fishImg = gfx.image.new(fishData.imgPath)
 		fishSprite = spr.new(fishImg)
+		fishSprite.name = fishName
 		--add collission
 		fishSprite:setCollideRect(0, 0, fishSprite:getSize())
 		fishSprite.collisionResponse = spr.kCollisionTypeOverlap
@@ -181,6 +182,13 @@ function playdate.update()
 		underwaterBackroundSprite:moveBy(0, -2 + reeling)
 		local bgY2 = underwaterBackroundSprite.y - bgY1
 
+		-- checks for selling
+		if underwaterBackroundSprite.y >= 1200 then
+			local fishData = Fishys[fishHooked.name]
+			local sellPrice = math.random(fishData.priceMin, fishData.priceMax)
+			print(fishData.priceMin)
+		end
+
 		--limits scrolling underwaterbackround too far and moves fish with underwaterbackround
 		if underwaterBackroundSprite.y >= 1200 then
 			underwaterBackroundSprite:moveTo(200, 1199)
@@ -228,6 +236,7 @@ function playdate.update()
 				end
 			end
 		end
+
 	end
 
 	-- Update all sprites
