@@ -9,6 +9,9 @@ local sound = playdate.sound
 local fishingHookSprite = nil
 local underwaterBackroundSprite = nil
 
+-- Sound
+local horseSound = nil
+
 --Fish
 local fishSprite = nil
 local fishHooked = nil
@@ -24,7 +27,7 @@ local balance = 0
 
 -- fish raritys
 Fishys = {
-	Cod = { probability = 50 / 100, imgPath = "assets/Fish/Common-Cod" }, --Common
+	Cod = { probability = 50 / 100, imgPath = "assets/Fish/Common-Cod", priceMin = "1", priceMax = "7" }, --Common
 	Nemo = { probability = 20 / 100, imgPath = "assets/Fish/Rare-Nemo" }, --Rare
 	Pufferfish = { probability = 15 / 100, imgPath = "assets/Fish/Epic-Pufferfish" }, --Epic
 	Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Legendary-Octopus" }, --Legendary
@@ -75,7 +78,6 @@ function spawnFish(count)
 		end
 
 		fishSprite:add()
-		print(fishName)
 		table.insert(spawnedFish, fishSprite)
 	end
 end
@@ -105,7 +107,12 @@ function setupGame()
 
 		-- load and play music
 		local underwaterMusic = sound.fileplayer.new("assets/Audio/underwaterMusic")
+		local bubblesSound = sound.fileplayer.new("assets/Audio/bubbles")
+		local horse = sound.fileplayer.new("assets/Audio/horse")
+		horseSound = horse
 		underwaterMusic:play()
+		bubblesSound:setVolume(0.75)
+		bubblesSound:play()
 
 		-- Create sprites from images
 		fishingHookSprite = spr.new(fishingHook)
@@ -140,6 +147,11 @@ function playdate.update()
 	local reeling = crankChange / 2
 
 	if underWater == true then
+		local rndm = math.random(1, 1000)
+		if rndm <= 1 then
+			horseSound:setVolume(0.2)
+			horseSound:play()
+		end
 		-- Move hook with arrow keys
 		if playdate.buttonIsPressed(playdate.kButtonRight) then
 			fishingHookSprite:moveWithCollisions(fishingHookSprite.x + 5, 50)
