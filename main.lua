@@ -10,7 +10,6 @@ local fishingHookSprite = nil
 local underwaterBackroundSprite = nil
 
 -- Sound
-local horseSound = nil
 
 --Fish
 local fishSprite = nil
@@ -18,11 +17,12 @@ local fishHooked = nil
 
 -- variables for crank pos
 local crankChange = 0
-local currentRotation = 90
 
--- out of the water
+-- location
 local aboveWater = false
 local underWater = true
+
+-- stats
 local balance = 0
 
 -- fish raritys
@@ -67,8 +67,9 @@ function spawnFish(count)
 		local rndmX = math.random(50, 350)
 		local rndmY = math.random(220, 2350)
 		fishSprite:moveWithCollisions(rndmX, rndmY)
-		--give random speed
-		fishSprite.speedX = math.random(1, 3)
+		--give and save random speed
+		fishSprite.speedX = math.random(2, 3)
+		fishSprite.speed = fishSprite.speedX
 		--flip the image to make it face the correct way
 		fishSprite:setImageFlip(gfx.kImageFlippedX)
 		--coinflip fish direction
@@ -84,19 +85,27 @@ function spawnFish(count)
 end
 
 function collissionCheck()
-	if fishHooked then
-		return
-	end
     for _, fish in pairs(spawnedFish) do
 		--local overlappingSprites = spr.allOverlappingSprites()
 		local overlappingSprites = fish:overlappingSprites()
+		
 		if #overlappingSprites >= 1 then
-			fishHooked = fish
+			if fishHooked then
+				fishHooked.speedX = fishSprite.speed
+				fishHooked:setRotation(0)
+				fishHooked:setCollideRect(0, 0, fishHooked:getSize())
+				fishHooked = fish
+			else
+				fishHooked = fish
+			end
+			return
 		end
 	end
 end
 
 function setupGame()
+	gfx.clear()
+
 	if aboveWater == true then
 		local aboveWaterBackround = gfx.image.new("assets/FishyFishyAbovewater")
 	end
@@ -106,11 +115,9 @@ function setupGame()
 		local underWaterBackround = gfx.image.new("assets/FishyFishyUnderwater")
 		local fishingHook = gfx.image.new("assets/fishhook2")
 
-		-- load and play music
+		-- load and play music/sounds
 		local underwaterMusic = sound.fileplayer.new("assets/Audio/underwaterMusic")
 		local bubblesSound = sound.fileplayer.new("assets/Audio/bubbles")
-		local horse = sound.fileplayer.new("assets/Audio/horse")
-		horseSound = horse
 		underwaterMusic:play()
 		bubblesSound:setVolume(0.75)
 		bubblesSound:play()
@@ -148,11 +155,7 @@ function playdate.update()
 	local reeling = crankChange / 2
 
 	if underWater == true then
-		local rndm = math.random(1, 1000)
-		if rndm <= 1 then
-			horseSound:setVolume(0.2)
-			horseSound:play()
-		end
+
 		-- Move hook with arrow keys
 		if playdate.buttonIsPressed(playdate.kButtonRight) then
 			fishingHookSprite:moveWithCollisions(fishingHookSprite.x + 5, 50)
@@ -175,19 +178,11 @@ function playdate.update()
 			fishHooked:setRotation(90)
 			fishHooked:setCollideRect(0, 0, fishHooked:getSize())
 		end
-		
 
 		-- scroll underwaterbackround with crank
 		local bgY1 = underwaterBackroundSprite.y
 		underwaterBackroundSprite:moveBy(0, -2 + reeling)
 		local bgY2 = underwaterBackroundSprite.y - bgY1
-
-		-- checks for selling
-		if underwaterBackroundSprite.y >= 1200 then
-			local fishData = Fishys[fishHooked.name]
-			local sellPrice = math.random(fishData.priceMin, fishData.priceMax)
-			print(fishData.priceMin)
-		end
 
 		--limits scrolling underwaterbackround too far and moves fish with underwaterbackround
 		if underwaterBackroundSprite.y >= 1200 then
@@ -235,6 +230,13 @@ function playdate.update()
 					fish:setImageFlip(gfx.kImageFlippedX)
 				end
 			end
+		end
+
+		-- checks for selling
+		if underwaterBackroundSprite.y >= 1200 then
+			local fishData = Fishys[fishHooked.name]
+			local sellPrice = math.random(fishData.priceMin, fishData.priceMax)
+			print(fishData.priceMin)
 		end
 
 	end
