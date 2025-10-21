@@ -8,6 +8,7 @@ local sound = playdate.sound
 -- Variables for our sprites
 local fishingHookSprite = nil
 local underwaterBackroundSprite = nil
+local aboveWaterBackroundSprite = nil
 
 -- Sound
 
@@ -108,6 +109,8 @@ function setupGame()
 
 	if aboveWater == true then
 		local aboveWaterBackround = gfx.image.new("assets/FishyFishyAbovewater")
+		aboveWaterBackroundSprite = spr.new(aboveWaterBackround)
+		aboveWaterBackroundSprite:add()
 	end
 
 	if underWater == true then
@@ -117,10 +120,10 @@ function setupGame()
 
 		-- load and play music/sounds
 		local underwaterMusic = sound.fileplayer.new("assets/Audio/underwaterMusic")
-		local bubblesSound = sound.fileplayer.new("assets/Audio/bubbles")
+		--local bubblesSound = sound.fileplayer.new("assets/Audio/bubbles")
 		underwaterMusic:play()
-		bubblesSound:setVolume(0.75)
-		bubblesSound:play()
+		--bubblesSound:setVolume(0.75)
+		--bubblesSound:play()
 
 		-- Create sprites from images
 		fishingHookSprite = spr.new(fishingHook)
@@ -233,10 +236,13 @@ function playdate.update()
 		end
 
 		-- checks for selling
-		if underwaterBackroundSprite.y >= 1200 then
+		if underwaterBackroundSprite.y >= 1199 then
 			local fishData = Fishys[fishHooked.name]
 			local sellPrice = math.random(fishData.priceMin, fishData.priceMax)
-			print(fishData.priceMin)
+			print(sellPrice)
+			underWater = false
+			aboveWater = true
+			setupGame()
 		end
 
 	end
