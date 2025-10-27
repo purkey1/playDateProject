@@ -15,6 +15,7 @@ local aboveWaterBackroundSprite = nil
 --Fish
 local fishSprite = nil
 local fishHooked = nil
+local fishPreviouslyHooked = nil
 
 -- variables for crank pos
 local crankChange = 0
@@ -28,14 +29,14 @@ local balance = 0
 
 -- fish raritys
 Fishys = {
-	Cod = { probability = 50 / 100, imgPath = "assets/Fish/Common-Cod", priceMin = "1", priceMax = "6" }, --Common
-	Nemo = { probability = 20 / 100, imgPath = "assets/Fish/Rare-Nemo", priceMin = "4", priceMax = "12" }, --Rare
-	Pufferfish = { probability = 15 / 100, imgPath = "assets/Fish/Epic-Pufferfish", priceMin = "10", priceMax = "18" }, --Epic
-	Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Legendary-Octopus", priceMin = "16", priceMax = "25" }, --Legendary
-	Angler = { probability = 4 / 100, imgPath = "assets/Fish/Mythical-Angler", priceMin = "23", priceMax = "31" }, --Mythical
-	Jellyfish = { probability = 2 / 100, imgPath = "assets/Fish/Insane-Jellyfish", priceMin = "29", priceMax = "37" }, --Insane
-	Shark = { probability = 10000 / 1000000, imgPath = "assets/Fish/Unknown-Shark", priceMin = "35", priceMax = "43" }, --Unknown
-	SpongeBOB = { probability = 1 / 1000000, imgPath = "assets/Fish/Unknown-Shark", priceMin = "100000", priceMax = "1000000" }, --Unknown
+	Cod = { probability = 50 / 100, imgPath = "assets/Fish/Common-Cod", sellGifPath = "assets/Animations/animationCOD", priceMin = "1", priceMax = "6" }, --Common
+	Nemo = { probability = 20 / 100, imgPath = "assets/Fish/Rare-Nemo", sellGifPath = "", priceMin = "4", priceMax = "12" }, --Rare
+	Pufferfish = { probability = 15 / 100, imgPath = "assets/Fish/Epic-Pufferfish", sellGifPath = "", priceMin = "10", priceMax = "18" }, --Epic
+	Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Legendary-Octopus", sellGifPath = "", priceMin = "16", priceMax = "25" }, --Legendary
+	Angler = { probability = 4 / 100, imgPath = "assets/Fish/Mythical-Angler", sellGifPath = "", priceMin = "23", priceMax = "31" }, --Mythical
+	Jellyfish = { probability = 2 / 100, imgPath = "assets/Fish/Insane-Jellyfish", sellGifPath = "", priceMin = "29", priceMax = "37" }, --Insane
+	Shark = { probability = 10000 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "", priceMin = "35", priceMax = "43" }, --Unknown
+	SpongeBOB = { probability = 1 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "", priceMin = "100000", priceMax = "1000000" }, --Unknown
 }
 
 local spawnedFish = {}
@@ -78,6 +79,7 @@ function spawnFish(count)
 		if direction > 0.5 then
 			fishSprite.speedX = -fishSprite.speedX
 			fishSprite:setImageFlip(gfx.kImageUnflipped)
+			
 		end
 
 		fishSprite:add()
@@ -86,20 +88,22 @@ function spawnFish(count)
 end
 
 function collissionCheck()
+	if fishHooked then
+		return
+	end
     for _, fish in pairs(spawnedFish) do
 		--local overlappingSprites = spr.allOverlappingSprites()
 		local overlappingSprites = fish:overlappingSprites()
-		
 		if #overlappingSprites >= 1 then
-			if fishHooked then
-				fishHooked.speedX = fishSprite.speed
-				fishHooked:setRotation(0)
-				fishHooked:setCollideRect(0, 0, fishHooked:getSize())
-				fishHooked = fish
+			if fish == fishPreviouslyHooked then
+				return
 			else
 				fishHooked = fish
+				fishHooked.speedX = 0
+				fishHooked:setRotation(90)
+				fishHooked:setCollideRect(0, 0, fishHooked:getSize())
+				return
 			end
-			return
 		end
 	end
 end
@@ -108,9 +112,10 @@ function setupGame()
 	gfx.clear()
 
 	if aboveWater == true then
-		local aboveWaterBackround = gfx.image.new("assets/FishyFishyAbovewater")
-		aboveWaterBackroundSprite = spr.new(aboveWaterBackround)
-		aboveWaterBackroundSprite:add()
+		fishData = Fishys[fishHooked.name]
+		print(fishData.sellGifPath)
+		local sellAnimationImgTbl = gfx.imagetable.new(fishData.sellGifPath)
+		local sellAnimation = gfx.animation.loop.new(sellAnimationImgTbl)
 	end
 
 	if underWater == true then
@@ -120,10 +125,10 @@ function setupGame()
 
 		-- load and play music/sounds
 		local underwaterMusic = sound.fileplayer.new("assets/Audio/underwaterMusic")
-		--local bubblesSound = sound.fileplayer.new("assets/Audio/bubbles")
+		local bubblesSound = sound.fileplayer.new("assets/Audio/bubbles")
 		underwaterMusic:play()
-		--bubblesSound:setVolume(0.75)
-		--bubblesSound:play()
+		bubblesSound:setVolume(0.75)
+		bubblesSound:play()
 
 		-- Create sprites from images
 		fishingHookSprite = spr.new(fishingHook)
@@ -147,6 +152,19 @@ function setupGame()
 		print("Spawned: " .. randomFishcount .. " fish")
 	end
 	print("all sprites loaded")
+end
+
+function buttonCheck()
+    if playdate.buttonJustPressed("A") then
+		fishHooked.speedX = fishHooked.speed
+		fishHooked:setRotation(0)
+		fishHooked:setCollideRect(0, 0, fishHooked:getSize())
+		fishPreviouslyHooked = fishHooked
+		fishHooked = nil
+		print("fish off")
+		--wait untill not colliding
+		
+    end
 end
 
 function playdate.update()
@@ -174,12 +192,11 @@ function playdate.update()
 		end
 
 		--Check for collission with fishingHookSprite
-		collissionCheck()
 		if fishHooked then
 			fishHooked:moveWithCollisions(fishingHookSprite.x, 187.5)
-			fishHooked.speedX = 0
-			fishHooked:setRotation(90)
-			fishHooked:setCollideRect(0, 0, fishHooked:getSize())
+			buttonCheck()
+		else
+			collissionCheck()
 		end
 
 		-- scroll underwaterbackround with crank
@@ -197,9 +214,15 @@ function playdate.update()
 				if fish.x > 350 then
 					fish.speedX = -fish.speedX
 					fish:setImageFlip(gfx.kImageUnflipped)
+					if fish == fishPreviouslyHooked then
+						fishPreviouslyHooked = nil
+					end
 				elseif fish.x < 50 then
 					fish.speedX = -fish.speedX
 					fish:setImageFlip(gfx.kImageFlippedX)
+					if fish == fishPreviouslyHooked then
+						fishPreviouslyHooked = nil
+					end
 				end
 			end
 		elseif underwaterBackroundSprite.y <= -960 then
@@ -211,9 +234,15 @@ function playdate.update()
 				if fish.x > 350 then
 					fish.speedX = -fish.speedX
 					fish:setImageFlip(gfx.kImageUnflipped)
+					if fish == fishPreviouslyHooked then
+						fishPreviouslyHooked = nil
+					end
 				elseif fish.x < 50 then
 					fish.speedX = -fish.speedX
 					fish:setImageFlip(gfx.kImageFlippedX)
+					if fish == fishPreviouslyHooked then
+						fishPreviouslyHooked = nil
+					end
 				end
 			end
 		else
@@ -228,15 +257,21 @@ function playdate.update()
 				if fish.x > 350 then
 					fish.speedX = -fish.speedX
 					fish:setImageFlip(gfx.kImageUnflipped)
+					if fish == fishPreviouslyHooked then
+						fishPreviouslyHooked = nil
+					end
 				elseif fish.x < 50 then
 					fish.speedX = -fish.speedX
 					fish:setImageFlip(gfx.kImageFlippedX)
+					if fish == fishPreviouslyHooked then
+						fishPreviouslyHooked = nil
+					end
 				end
 			end
 		end
 
 		-- checks for selling
-		if underwaterBackroundSprite.y >= 1199 then
+		if underwaterBackroundSprite.y >= 1199 and fishHooked then
 			local fishData = Fishys[fishHooked.name]
 			local sellPrice = math.random(fishData.priceMin, fishData.priceMax)
 			print(sellPrice)
