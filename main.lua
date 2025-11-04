@@ -1,6 +1,7 @@
 import("CoreLibs/graphics")
 import("CoreLibs/sprites")
 
+local animation = playdate.graphics.animation
 local gfx = playdate.graphics
 local spr = gfx.sprite
 local sound = playdate.sound
@@ -9,6 +10,7 @@ local sound = playdate.sound
 local fishingHookSprite = nil
 local underwaterBackroundSprite = nil
 local aboveWaterBackroundSprite = nil
+local sellAnimationSprite = nil
 
 -- Sound
 
@@ -79,7 +81,6 @@ function spawnFish(count)
 		if direction > 0.5 then
 			fishSprite.speedX = -fishSprite.speedX
 			fishSprite:setImageFlip(gfx.kImageUnflipped)
-			
 		end
 
 		fishSprite:add()
@@ -108,17 +109,28 @@ function collissionCheck()
 	end
 end
 
+function animation()
+	local sellAnimationImg = sellAnimationImgs:getImage(1)
+	sellAnimation:setImage(sellAnimation.animation:image())
+end
+
 function setupGame()
 	gfx.clear()
 
 	if aboveWater == true then
+		playdate.display.setRefreshRate(10)
 		fishData = Fishys[fishHooked.name]
 		print(fishData.sellGifPath)
 		local sellAnimationImgTbl = gfx.imagetable.new(fishData.sellGifPath)
-		local sellAnimation = gfx.animation.loop.new(sellAnimationImgTbl)
+		print(sellAnimationImgTbl)
+		local sellAnimationSprite = spr.new()
+		sellAnimation.animation = gfx.animation.new(100, sellAnimationImgTbl, true)
+		animation()
+		sellAnimationSprite:add()
 	end
 
 	if underWater == true then
+		playdate.display.setRefreshRate(40)
 		-- Load images
 		local underWaterBackround = gfx.image.new("assets/FishyFishyUnderwater")
 		local fishingHook = gfx.image.new("assets/fishhook2")
