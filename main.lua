@@ -124,7 +124,7 @@ function setupGame()
 		local sellAnimationImgTbl = gfx.imagetable.new(fishData.sellGifPath)
 		print(sellAnimationImgTbl)
 		local sellAnimationSprite = spr.new()
-		sellAnimation.animation = gfx.animation.new(100, sellAnimationImgTbl, true)
+		sellAnimation.animation = gfx.animation.loop.new(100, sellAnimationImgTbl, true)
 		animation()
 		sellAnimationSprite:add()
 	end
@@ -286,7 +286,8 @@ function playdate.update()
 		if underwaterBackroundSprite.y >= 1199 and fishHooked then
 			local fishData = Fishys[fishHooked.name]
 			local sellPrice = math.random(fishData.priceMin, fishData.priceMax)
-			print(sellPrice)
+			balance = balance + sellPrice
+			print("Balance: "..balance)
 			underWater = false
 			aboveWater = true
 			setupGame()
