@@ -26,12 +26,17 @@ local crankChange = 0
 local aboveWater = false
 local underWater = true
 
+-- selling Fish Animation
+local animationDone = false
+local animationIndex = 1
+local soldFish = nil
+
 -- stats
 local balance = 0
 
 -- fish raritys
 Fishys = {
-	Cod = { probability = 50 / 100, imgPath = "assets/Fish/Common-Cod", sellGifPath = "assets/Animations/animationCOD", priceMin = "1", priceMax = "6" }, --Common
+	Cod = { probability = 50 / 100, imgPath = "assets/Fish/Common-Cod", sellGifPath = "assets/Animations/cod", priceMin = "1", priceMax = "6" }, --Common
 	Nemo = { probability = 20 / 100, imgPath = "assets/Fish/Rare-Nemo", sellGifPath = "", priceMin = "4", priceMax = "12" }, --Rare
 	Pufferfish = { probability = 15 / 100, imgPath = "assets/Fish/Epic-Pufferfish", sellGifPath = "", priceMin = "10", priceMax = "18" }, --Epic
 	Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Legendary-Octopus", sellGifPath = "", priceMin = "16", priceMax = "25" }, --Legendary
@@ -110,8 +115,18 @@ function collissionCheck()
 end
 
 function animation()
-	local sellAnimationImg = sellAnimationImgs:getImage(1)
-	sellAnimation:setImage(sellAnimation.animation:image())
+	local sellingFish = Fishys[soldFish.name]
+	print(sellingFish.sellGifPath)
+	print(soldFish.name)
+	local files = playdate.file.
+	print(files)
+	for i = 1, #files do
+		local animationFrame = gfx.image.new(sellingFish.sellGifPath .. string.upper(soldFish.name) .. animationIndex)
+		sellAnimationSprite = spr.new(animationFrame)
+		sellAnimationSprite:moveTo(200, 120)
+		sellAnimationSprite:add()
+		animationIndex += 1
+	end
 end
 
 function setupGame()
@@ -119,14 +134,6 @@ function setupGame()
 
 	if aboveWater == true then
 		playdate.display.setRefreshRate(10)
-		fishData = Fishys[fishHooked.name]
-		print(fishData.sellGifPath)
-		local sellAnimationImgTbl = gfx.imagetable.new(fishData.sellGifPath)
-		print(sellAnimationImgTbl)
-		local sellAnimationSprite = spr.new()
-		sellAnimation.animation = gfx.animation.loop.new(100, sellAnimationImgTbl, true)
-		animation()
-		sellAnimationSprite:add()
 	end
 
 	if underWater == true then
@@ -186,6 +193,12 @@ function playdate.update()
 	--get crank pos
 	crankChange = playdate.getCrankChange()
 	local reeling = crankChange / 2
+
+	if aboveWater == true then
+		if animationDone ~= true then
+			animation()
+		end
+	end
 
 	if underWater == true then
 
@@ -285,6 +298,7 @@ function playdate.update()
 		-- checks for selling
 		if underwaterBackroundSprite.y >= 1199 and fishHooked then
 			local fishData = Fishys[fishHooked.name]
+			soldFish = fishHooked
 			local sellPrice = math.random(fishData.priceMin, fishData.priceMax)
 			balance = balance + sellPrice
 			print("Balance: "..balance)
