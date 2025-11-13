@@ -37,12 +37,12 @@ local balance = 0
 -- fish raritys
 Fishys = {
 	Cod = { probability = 50 / 100, imgPath = "assets/Fish/Common-Cod", sellGifPath = "assets/Animations/cod", priceMin = "1", priceMax = "6" }, --Common
-	Nemo = { probability = 20 / 100, imgPath = "assets/Fish/Rare-Nemo", sellGifPath = "", priceMin = "4", priceMax = "12" }, --Rare
-	Pufferfish = { probability = 15 / 100, imgPath = "assets/Fish/Epic-Pufferfish", sellGifPath = "", priceMin = "10", priceMax = "18" }, --Epic
-	Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Legendary-Octopus", sellGifPath = "", priceMin = "16", priceMax = "25" }, --Legendary
-	Angler = { probability = 4 / 100, imgPath = "assets/Fish/Mythical-Angler", sellGifPath = "", priceMin = "23", priceMax = "31" }, --Mythical
-	Jellyfish = { probability = 2 / 100, imgPath = "assets/Fish/Insane-Jellyfish", sellGifPath = "", priceMin = "29", priceMax = "37" }, --Insane
-	Shark = { probability = 10000 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "", priceMin = "35", priceMax = "43" }, --Unknown
+	Nemo = { probability = 20 / 100, imgPath = "assets/Fish/Rare-Nemo", sellGifPath = "assets/Animations/nemo", priceMin = "4", priceMax = "12" }, --Rare
+	Pufferfish = { probability = 15 / 100, imgPath = "assets/Fish/Epic-Pufferfish", sellGifPath = "assets/Animations/pufferfish", priceMin = "10", priceMax = "18" }, --Epic
+	Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Legendary-Octopus", sellGifPath = "assets/Animations/octopus", priceMin = "16", priceMax = "25" }, --Legendary
+	Angler = { probability = 4 / 100, imgPath = "assets/Fish/Mythical-Angler", sellGifPath = "assets/Animations/angler", priceMin = "23", priceMax = "31" }, --Mythical
+	Jellyfish = { probability = 2 / 100, imgPath = "assets/Fish/Insane-Jellyfish", sellGifPath = "assets/Animations/jellyfish", priceMin = "29", priceMax = "37" }, --Insane
+	Shark = { probability = 10000 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "assets/Animations/shark", priceMin = "35", priceMax = "43" }, --Unknown
 	SpongeBOB = { probability = 1 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "", priceMin = "100000", priceMax = "1000000" }, --Unknown
 }
 
@@ -116,17 +116,21 @@ end
 
 function animation()
 	local sellingFish = Fishys[soldFish.name]
-	print(sellingFish.sellGifPath)
-	print(soldFish.name)
-	local files = playdate.file.
-	print(files)
-	for i = 1, #files do
-		local animationFrame = gfx.image.new(sellingFish.sellGifPath .. string.upper(soldFish.name) .. animationIndex)
-		sellAnimationSprite = spr.new(animationFrame)
-		sellAnimationSprite:moveTo(200, 120)
-		sellAnimationSprite:add()
-		animationIndex += 1
+	local files = playdate.file.listFiles(sellingFish.sellGifPath)
+	local numOfFiles = #files
+	print(sellingFish.sellGifPath .. "/animation" .. string.upper(soldFish.name) .. animationIndex)
+	gfx.sprite.removeAll()
+	local animationFrame = gfx.image.new(sellingFish.sellGifPath .. "/animation" .. string.upper(soldFish.name) .. animationIndex)
+	sellAnimationSprite = spr.new(animationFrame)
+	sellAnimationSprite:moveTo(200, 120)
+	sellAnimationSprite:add()
+	if #files == animationIndex then
+		animationDone = true
+		local coinSound = sound.fileplayer.new("assets/Audio/coins")
+		coinSound:setVolume(0.75)
+		coinSound:play()
 	end
+	animationIndex += 1
 end
 
 function setupGame()
@@ -134,6 +138,8 @@ function setupGame()
 
 	if aboveWater == true then
 		playdate.display.setRefreshRate(10)
+		underwaterMusic:pause()
+		bubblesSound:pause()
 	end
 
 	if underWater == true then
@@ -197,6 +203,7 @@ function playdate.update()
 	if aboveWater == true then
 		if animationDone ~= true then
 			animation()
+			gfx.drawText("Balance: " .. balance, 100, 100)
 		end
 	end
 
