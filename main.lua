@@ -13,6 +13,8 @@ local aboveWaterBackroundSprite = nil
 local sellAnimationSprite = nil
 
 -- Sound
+local underwaterMusic = nil
+local bubblesSound = nil
 
 --Fish
 local fishSprite = nil
@@ -36,14 +38,14 @@ local balance = 0
 
 -- fish raritys
 Fishys = {
-	Cod = { probability = 50 / 100, imgPath = "assets/Fish/Common-Cod", sellGifPath = "assets/Animations/cod", priceMin = "1", priceMax = "6" }, --Common
-	Nemo = { probability = 20 / 100, imgPath = "assets/Fish/Rare-Nemo", sellGifPath = "assets/Animations/nemo", priceMin = "4", priceMax = "12" }, --Rare
+	Cod = { probability = 50 / 100, imgPath = "assets/Fish/Common-Cod", sellGifPath = "assets/Animations/cod", priceMin = "1", priceMax = "6" },                   --Common
+	Nemo = { probability = 20 / 100, imgPath = "assets/Fish/Rare-Nemo", sellGifPath = "assets/Animations/nemo", priceMin = "4", priceMax = "12" },                 --Rare
 	Pufferfish = { probability = 15 / 100, imgPath = "assets/Fish/Epic-Pufferfish", sellGifPath = "assets/Animations/pufferfish", priceMin = "10", priceMax = "18" }, --Epic
-	Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Legendary-Octopus", sellGifPath = "assets/Animations/octopus", priceMin = "16", priceMax = "25" }, --Legendary
-	Angler = { probability = 4 / 100, imgPath = "assets/Fish/Mythical-Angler", sellGifPath = "assets/Animations/angler", priceMin = "23", priceMax = "31" }, --Mythical
+	Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Legendary-Octopus", sellGifPath = "assets/Animations/octopus", priceMin = "16", priceMax = "25" },   --Legendary
+	Angler = { probability = 4 / 100, imgPath = "assets/Fish/Mythical-Angler", sellGifPath = "assets/Animations/angler", priceMin = "23", priceMax = "31" },       --Mythical
 	Jellyfish = { probability = 2 / 100, imgPath = "assets/Fish/Insane-Jellyfish", sellGifPath = "assets/Animations/jellyfish", priceMin = "29", priceMax = "37" }, --Insane
-	Shark = { probability = 10000 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "assets/Animations/shark", priceMin = "35", priceMax = "43" }, --Unknown
-	SpongeBOB = { probability = 1 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "", priceMin = "100000", priceMax = "1000000" }, --Unknown
+	Shark = { probability = 10000 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "assets/Animations/shark", priceMin = "35", priceMax = "43" },   --Unknown
+	SpongeBOB = { probability = 1 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "", priceMin = "100000", priceMax = "1000000" },                 --Unknown
 }
 
 local spawnedFish = {}
@@ -97,7 +99,7 @@ function collissionCheck()
 	if fishHooked then
 		return
 	end
-    for _, fish in pairs(spawnedFish) do
+	for _, fish in pairs(spawnedFish) do
 		--local overlappingSprites = spr.allOverlappingSprites()
 		local overlappingSprites = fish:overlappingSprites()
 		if #overlappingSprites >= 1 then
@@ -117,8 +119,6 @@ end
 function animation()
 	local sellingFish = Fishys[soldFish.name]
 	local files = playdate.file.listFiles(sellingFish.sellGifPath)
-	local numOfFiles = #files
-	print(sellingFish.sellGifPath .. "/animation" .. string.upper(soldFish.name) .. animationIndex)
 	gfx.sprite.removeAll()
 	local animationFrame = gfx.image.new(sellingFish.sellGifPath .. "/animation" .. string.upper(soldFish.name) .. animationIndex)
 	sellAnimationSprite = spr.new(animationFrame)
@@ -129,6 +129,9 @@ function animation()
 		local coinSound = sound.fileplayer.new("assets/Audio/coins")
 		coinSound:setVolume(0.75)
 		coinSound:play()
+		local sellPrice = math.random(sellingFish.priceMin, sellingFish.priceMax)
+		balance = balance + sellPrice
+		print("Balance: " .. balance)
 	end
 	animationIndex += 1
 end
@@ -143,14 +146,14 @@ function setupGame()
 	end
 
 	if underWater == true then
-		playdate.display.setRefreshRate(40)
+		playdate.display.setRefreshRate(30)
 		-- Load images
 		local underWaterBackround = gfx.image.new("assets/FishyFishyUnderwater")
 		local fishingHook = gfx.image.new("assets/fishhook2")
 
 		-- load and play music/sounds
-		local underwaterMusic = sound.fileplayer.new("assets/Audio/underwaterMusic")
-		local bubblesSound = sound.fileplayer.new("assets/Audio/bubbles")
+		underwaterMusic = sound.fileplayer.new("assets/Audio/underwaterMusic")
+		bubblesSound = sound.fileplayer.new("assets/Audio/bubbles")
 		underwaterMusic:play()
 		bubblesSound:setVolume(0.75)
 		bubblesSound:play()
@@ -158,7 +161,7 @@ function setupGame()
 		-- Create sprites from images
 		fishingHookSprite = spr.new(fishingHook)
 		local width, height = fishingHookSprite:getSize()
-		fishingHookSprite:setCollideRect(2.5, 187.5, width-5, 50)
+		fishingHookSprite:setCollideRect(2.5, 187.5, width - 5, 50)
 		fishingHookSprite.collisionResponse = spr.kCollisionTypeOverlap
 		fishingHookSprite:setGroups(1)
 		fishingHookSprite:setCollidesWithGroups(2)
@@ -173,23 +176,21 @@ function setupGame()
 		underwaterBackroundSprite:add()
 
 		local randomFishcount = math.random(10, 20)
-		spawnFish(randomFishcount)
+		spawnFish(100)
 		print("Spawned: " .. randomFishcount .. " fish")
 	end
 	print("all sprites loaded")
 end
 
 function buttonCheck()
-    if playdate.buttonJustPressed("A") then
+	if playdate.buttonJustPressed("A") then
 		fishHooked.speedX = fishHooked.speed
 		fishHooked:setRotation(0)
 		fishHooked:setCollideRect(0, 0, fishHooked:getSize())
 		fishPreviouslyHooked = fishHooked
 		fishHooked = nil
 		print("fish off")
-		--wait untill not colliding
-		
-    end
+	end
 end
 
 function playdate.update()
@@ -203,12 +204,14 @@ function playdate.update()
 	if aboveWater == true then
 		if animationDone ~= true then
 			animation()
-			gfx.drawText("Balance: " .. balance, 100, 100)
 		end
+		local balanceSprite = spr.spriteWithText("Balance: " .. "*" .. balance .. "*", 100, 20)
+		balanceSprite:setCenter(0, 0)
+		balanceSprite:moveTo(5, 5)
+		balanceSprite:add()
 	end
 
 	if underWater == true then
-
 		-- Move hook with arrow keys
 		if playdate.buttonIsPressed(playdate.kButtonRight) then
 			fishingHookSprite:moveWithCollisions(fishingHookSprite.x + 5, 50)
@@ -240,7 +243,6 @@ function playdate.update()
 		if underwaterBackroundSprite.y >= 1200 then
 			underwaterBackroundSprite:moveTo(200, 1199)
 			for _, fish in pairs(spawnedFish) do
-
 				-- Fish swimming left and right with facing the correct direction
 				fish:moveBy(fish.speedX, 0)
 				if fish.x > 350 then
@@ -260,7 +262,6 @@ function playdate.update()
 		elseif underwaterBackroundSprite.y <= -960 then
 			underwaterBackroundSprite:moveTo(200, -959)
 			for _, fish in pairs(spawnedFish) do
-
 				-- Fish swimming left and right with facing the correct direction
 				fish:moveBy(fish.speedX, 0)
 				if fish.x > 350 then
@@ -280,8 +281,8 @@ function playdate.update()
 		else
 			for _, fish in pairs(spawnedFish) do
 				if fishHooked ~= fish then
-				--Keep fish with underwaterBackroundSprite
-				fish:moveBy(0, bgY2)
+					--Keep fish with underwaterBackroundSprite
+					fish:moveBy(0, bgY2)
 				end
 
 				-- Fish swimming left and right with facing the correct direction
@@ -304,20 +305,18 @@ function playdate.update()
 
 		-- checks for selling
 		if underwaterBackroundSprite.y >= 1199 and fishHooked then
-			local fishData = Fishys[fishHooked.name]
 			soldFish = fishHooked
-			local sellPrice = math.random(fishData.priceMin, fishData.priceMax)
-			balance = balance + sellPrice
-			print("Balance: "..balance)
+			underwaterMusic:pause()
+			bubblesSound:pause()
 			underWater = false
 			aboveWater = true
 			setupGame()
 		end
-
 	end
 
 	-- Update all sprites
 	gfx.sprite.update()
 end
+
 -- Start the game
 setupGame()
