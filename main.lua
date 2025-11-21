@@ -28,10 +28,18 @@ local crankChange = 0
 local aboveWater = false
 local underWater = true
 
+--transitions
+local fadeAnimationDone = false
+local fadeAnimationIndex = 1
+
 -- selling Fish Animation
-local animationDone = false
-local animationIndex = 1
+local sellAnimationDone = false
+local sellAnimationIndex = 1
 local soldFish = nil
+
+-- selling
+local sellingDone = false
+local blanceIndex = 0
 
 -- stats
 local balance = 0
@@ -108,7 +116,9 @@ function collissionCheck()
 			else
 				fishHooked = fish
 				fishHooked.speedX = 0
-				fishHooked:setRotation(90)
+				if fish.name ~= "Jellyfish" then
+					fishHooked:setRotation(90)
+				end
 				fishHooked:setCollideRect(0, 0, fishHooked:getSize())
 				return
 			end
@@ -116,24 +126,43 @@ function collissionCheck()
 	end
 end
 
-function animation()
+function fadeAnimation()
 	local sellingFish = Fishys[soldFish.name]
 	local files = playdate.file.listFiles(sellingFish.sellGifPath)
 	gfx.sprite.removeAll()
-	local animationFrame = gfx.image.new(sellingFish.sellGifPath .. "/animation" .. string.upper(soldFish.name) .. animationIndex)
-	sellAnimationSprite = spr.new(animationFrame)
+	local fadeAnimationFrame = gfx.image.new(sellingFish.sellGifPath .. "/animation" .. string.upper(soldFish.name) .. fadeAnimationIndex)
+	fadeAnimationSprite = spr.new(fadeAnimationFrame)
+	fadeAnimationSprite:moveTo(200, 120)
+	fadeAnimationSprite:add()
+	gfx.fillRect(0, 0, 400, 120)
+	if #files == fadeAnimationIndex then
+		fadeAnimationDone = true
+	end
+	fadeAnimationIndex += 1
+end
+
+function sellAnimation()
+	local sellingFish = Fishys[soldFish.name]
+	local files = playdate.file.listFiles(sellingFish.sellGifPath)
+	gfx.sprite.removeAll()
+	local sellAnimationFrame = gfx.image.new(sellingFish.sellGifPath .. "/animation" .. string.upper(soldFish.name) .. sellAnimationIndex)
+	sellAnimationSprite = spr.new(sellAnimationFrame)
 	sellAnimationSprite:moveTo(200, 120)
 	sellAnimationSprite:add()
-	if #files == animationIndex then
-		animationDone = true
-		local coinSound = sound.fileplayer.new("assets/Audio/coins")
-		coinSound:setVolume(0.75)
-		coinSound:play()
-		local sellPrice = math.random(sellingFish.priceMin, sellingFish.priceMax)
-		balance = balance + sellPrice
-		print("Balance: " .. balance)
+	if #files == sellAnimationIndex then
+		sellAnimationDone = true
+		sellFish()
 	end
-	animationIndex += 1
+	sellAnimationIndex += 1
+end
+
+function sellFish()
+	local sellingFish = Fishys[soldFish.name]
+	local coinSound = sound.fileplayer.new("assets/Audio/coins")
+	coinSound:setVolume(0.75)
+	coinSound:play()
+	local sellPrice = math.random(sellingFish.priceMin, sellingFish.priceMax)
+	balance = balance + sellPrice
 end
 
 function setupGame()
@@ -202,8 +231,8 @@ function playdate.update()
 	local reeling = crankChange / 2
 
 	if aboveWater == true then
-		if animationDone ~= true then
-			animation()
+		if sellAnimationDone ~= true and fadeAnimationDone == true then
+			sellAnimation()
 		end
 		local balanceSprite = spr.spriteWithText("Balance: " .. "*" .. balance .. "*", 100, 20)
 		balanceSprite:setCenter(0, 0)
