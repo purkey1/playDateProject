@@ -127,18 +127,13 @@ function collissionCheck()
 end
 
 function fadeAnimation()
-	local sellingFish = Fishys[soldFish.name]
-	local files = playdate.file.listFiles(sellingFish.sellGifPath)
-	gfx.sprite.removeAll()
-	local fadeAnimationFrame = gfx.image.new(sellingFish.sellGifPath .. "/animation" .. string.upper(soldFish.name) .. fadeAnimationIndex)
-	fadeAnimationSprite = spr.new(fadeAnimationFrame)
-	fadeAnimationSprite:moveTo(200, 120)
-	fadeAnimationSprite:add()
-	gfx.fillRect(0, 0, 400, 120)
-	if #files == fadeAnimationIndex then
+	gfx.setColor(gfx.kColorBlack)
+	gfx.setDitherPattern(fadeAnimationIndex)
+	gfx.fillRect(0, 0, 400, 240)
+	if fadeAnimationIndex == 0 then
 		fadeAnimationDone = true
 	end
-	fadeAnimationIndex += 1
+	fadeAnimationIndex -= 0.1
 end
 
 function sellAnimation()
@@ -231,7 +226,10 @@ function playdate.update()
 	local reeling = crankChange / 2
 
 	if aboveWater == true then
-		if sellAnimationDone ~= true and fadeAnimationDone == true then
+		if fadeAnimationDone == false then
+			fadeAnimation()
+		end
+		if sellAnimationDone == false and fadeAnimationDone == true then
 			sellAnimation()
 		end
 		local balanceSprite = spr.spriteWithText("Balance: " .. "*" .. balance .. "*", 100, 20)
@@ -339,6 +337,7 @@ function playdate.update()
 			bubblesSound:pause()
 			underWater = false
 			aboveWater = true
+			fadeAnimation()
 			setupGame()
 		end
 	end
