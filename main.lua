@@ -11,6 +11,7 @@ local fishingHookSprite = nil
 local underwaterBackroundSprite = nil
 local aboveWaterBackroundSprite = nil
 local sellAnimationSprite = nil
+local balanceTextSprite = nil
 
 -- Sound
 local underwaterMusic = nil
@@ -31,9 +32,11 @@ local underWater = true
 --transitions
 local fadeAnimationDone = false
 local fadeAnimationIndex = 1
+local fadeAnimationSection = 1
 
 -- selling Fish Animation
 local sellAnimationDone = false
+local coinAnimationDone = false
 local sellAnimationIndex = 1
 local soldFish = nil
 
@@ -99,6 +102,9 @@ function spawnFish(count)
 		end
 
 		fishSprite:add()
+		if fishName == "SpongeBOB" then
+			print("SpongeBOB has spawned")
+		end
 		table.insert(spawnedFish, fishSprite)
 	end
 end
@@ -128,27 +134,65 @@ end
 
 function fadeAnimation()
 	gfx.setColor(gfx.kColorBlack)
-	gfx.setDitherPattern(fadeAnimationIndex)
-	gfx.fillRect(0, 0, 400, 240)
-	if fadeAnimationIndex == 0 then
-		fadeAnimationDone = true
+	gfx.sprite.removeAll()
+	if aboveWater == true then
+			if fadeAnimationSection ~= 1 then
+				local sellBackround = gfx.image.new("assets/frame1BASE")
+				aboveWaterBackroundSprite = spr.new(sellBackround)
+				aboveWaterBackroundSprite:moveTo(200, 120)
+				aboveWaterBackroundSprite:add()
+				gfx.setDitherPattern(fadeAnimationIndex)
+				gfx.fillRect(0, 0, 400, 240)
+				fadeAnimationIndex += 0.09
+			else
+				local underwaterBackround = gfx.image.new("assets/FishyFishyUnderwater")
+				underwaterBackroundSprite = spr.new(underwaterBackround)
+				underwaterBackroundSprite:moveTo(200, 1200)
+				underwaterBackroundSprite:add()
+				gfx.setDitherPattern(fadeAnimationIndex)
+				gfx.fillRect(0, 0, 400, 240)
+				fadeAnimationIndex -= 0.09
+				if fadeAnimationIndex <= 0 then
+					fadeAnimationSection = 2
+				end
+			end
 	end
-	fadeAnimationIndex -= 0.1
+	if fadeAnimationIndex >= 1 then
+		fadeAnimationDone = true
+		gfx.sprite.removeAll()
+	end
+	
 end
 
 function sellAnimation()
-	local sellingFish = Fishys[soldFish.name]
-	local files = playdate.file.listFiles(sellingFish.sellGifPath)
-	gfx.sprite.removeAll()
-	local sellAnimationFrame = gfx.image.new(sellingFish.sellGifPath .. "/animation" .. string.upper(soldFish.name) .. sellAnimationIndex)
-	sellAnimationSprite = spr.new(sellAnimationFrame)
-	sellAnimationSprite:moveTo(200, 120)
-	sellAnimationSprite:add()
-	if #files == sellAnimationIndex then
-		sellAnimationDone = true
-		sellFish()
+	if sellAnimationDone == false then
+		local sellingFish = Fishys[soldFish.name]
+		local files = playdate.file.listFiles(sellingFish.sellGifPath)
+		gfx.sprite.removeAll()
+		local sellAnimationFrame = gfx.image.new(sellingFish.sellGifPath .. "/animation" .. string.upper(soldFish.name) .. sellAnimationIndex)
+		sellAnimationSprite = spr.new(sellAnimationFrame)
+		sellAnimationSprite:moveTo(200, 120)
+		sellAnimationSprite:add()
+		if #files == sellAnimationIndex then
+			sellAnimationDone = true
+			sellAnimationIndex = 1
+		end
+		sellAnimationIndex += 1
+	else
+		if coinAnimationSprite then
+			coinAnimationSprite:remove()
+		end
+		local files = playdate.file.listFiles("assets/Animations/coin")
+		local coinAnimationFrame = gfx.image.new("assets/Animations/coin/animationCOIN" .. sellAnimationIndex)
+		coinAnimationSprite = spr.new(coinAnimationFrame)
+		coinAnimationSprite:moveTo(200, 120)
+		coinAnimationSprite:add()
+		if #files == sellAnimationIndex then
+			coinAnimationDone = true
+			sellFish()
+		end
+		sellAnimationIndex += 1
 	end
-	sellAnimationIndex += 1
 end
 
 function sellFish()
@@ -157,7 +201,7 @@ function sellFish()
 	coinSound:setVolume(0.75)
 	coinSound:play()
 	local sellPrice = math.random(sellingFish.priceMin, sellingFish.priceMax)
-	balance = balance + sellPrice
+	balance += sellPrice
 end
 
 function setupGame()
@@ -207,13 +251,23 @@ function setupGame()
 end
 
 function buttonCheck()
-	if playdate.buttonJustPressed("A") then
-		fishHooked.speedX = fishHooked.speed
-		fishHooked:setRotation(0)
-		fishHooked:setCollideRect(0, 0, fishHooked:getSize())
-		fishPreviouslyHooked = fishHooked
-		fishHooked = nil
-		print("fish off")
+	if underWater then
+		if playdate.buttonJustPressed("A") then
+			fishHooked.speedX = fishHooked.speed
+			fishHooked:setRotation(0)
+			fishHooked:setCollideRect(0, 0, fishHooked:getSize())
+			fishPreviouslyHooked = fishHooked
+			fishHooked = nil
+			print("fish off")
+		end
+	else
+		if playdate.buttonJustPressed("down") then
+			soldFish = nil
+			underWater = true
+			aboveWater = false
+			fadeAnimation()
+			setupGame()
+		end
 	end
 end
 
@@ -227,15 +281,19 @@ function playdate.update()
 
 	if aboveWater == true then
 		if fadeAnimationDone == false then
+			gfx.sprite.update()
 			fadeAnimation()
-		end
-		if sellAnimationDone == false and fadeAnimationDone == true then
+		elseif coinAnimationDone == false then
 			sellAnimation()
+			balanceTextSprite = spr.spriteWithText("Balance: " .. "*" .. balance .. "*", 100, 20)
+			balanceTextSprite:setCenter(0, 0)
+			balanceTextSprite:moveTo(5, 5)
+			balanceTextSprite:add()
+			gfx.sprite.update()
+		else
+			buttonCheck()
+			gfx.sprite.update()
 		end
-		local balanceSprite = spr.spriteWithText("Balance: " .. "*" .. balance .. "*", 100, 20)
-		balanceSprite:setCenter(0, 0)
-		balanceSprite:moveTo(5, 5)
-		balanceSprite:add()
 	end
 
 	if underWater == true then
@@ -333,6 +391,7 @@ function playdate.update()
 		-- checks for selling
 		if underwaterBackroundSprite.y >= 1199 and fishHooked then
 			soldFish = fishHooked
+			fishHooked = nil
 			underwaterMusic:pause()
 			bubblesSound:pause()
 			underWater = false
@@ -340,10 +399,9 @@ function playdate.update()
 			fadeAnimation()
 			setupGame()
 		end
+		-- Update all sprites
+		gfx.sprite.update()
 	end
-
-	-- Update all sprites
-	gfx.sprite.update()
 end
 
 -- Start the game
