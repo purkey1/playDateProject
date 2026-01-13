@@ -137,16 +137,10 @@ function fadeAnimation()
 	gfx.setColor(gfx.kColorBlack)
 	gfx.sprite.removeAll()
 	if aboveWater == true then
-			if fadeAnimationSection == 2 then
-				local sellBackround = gfx.image.new("assets/frame1BASE")
-				aboveWaterBackroundSprite = spr.new(sellBackround)
-				aboveWaterBackroundSprite:moveTo(200, 120)
-				aboveWaterBackroundSprite:add()
-				gfx.setDitherPattern(fadeAnimationIndex)
-				gfx.fillRect(0, 0, 400, 240)
-				fadeAnimationIndex += 0.09
-			else
-				-- if fadeAnimationSection is equal to 1 it starts here. goes through this untill 
+			if fadeAnimationSection == 1 then
+				-- when fadeAnimationSection is equal to 1 it goes through this 
+				--untill the fadeAnimationIndex is less than 0 once it is
+				--it changes fadeAnimationSection equal to 2, which skips the first part and runs the else statement below
 				local underwaterBackround = gfx.image.new("assets/FishyFishyUnderwater")
 				underwaterBackroundSprite = spr.new(underwaterBackround)
 				underwaterBackroundSprite:moveTo(200, 1200)
@@ -157,6 +151,14 @@ function fadeAnimation()
 				if fadeAnimationIndex <= 0 then
 					fadeAnimationSection = 2
 				end
+			else
+				local sellBackround = gfx.image.new("assets/frame1BASE")
+				aboveWaterBackroundSprite = spr.new(sellBackround)
+				aboveWaterBackroundSprite:moveTo(200, 120)
+				aboveWaterBackroundSprite:add()
+				gfx.setDitherPattern(fadeAnimationIndex)
+				gfx.fillRect(0, 0, 400, 240)
+				fadeAnimationIndex += 0.09
 			end
 	end
 
@@ -183,9 +185,8 @@ function fadeAnimation()
 		end
 	end
 
-	if fadeAnimationIndex >= 1 then
+	if fadeAnimationIndex > 1 then
 		fadeAnimationDone = true
-		fadeAnimationIndex = 1
 		gfx.sprite.removeAll()
 		setupGame()
 	end
@@ -294,11 +295,13 @@ function buttonCheck()
 			soldFish = nil
 			fishHooked = nil
 			fishPreviouslyHooked = nil
-			fadeAnimationDone = false
-			underWater = true
-			aboveWater = false
 			fadeAnimationSection = 2
 			fadeAnimationDone = false
+			fadeAnimationIndex = 1
+			sellAnimationDone = false
+			sellAnimationIndex = 1
+			aboveWater = false
+			underWater = true
 			fadeAnimation()
 		end
 	end
