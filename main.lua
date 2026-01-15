@@ -171,6 +171,9 @@ function fadeAnimation()
 			gfx.setDitherPattern(fadeAnimationIndex)
 			gfx.fillRect(0, 0, 400, 240)
 			fadeAnimationIndex -= 0.09
+			if fadeAnimationIndex <= 0 then
+				fadeAnimationSection = 2
+			end
 		else
 			local underwaterBackround = gfx.image.new("assets/FishyFishyUnderwater")
 			underwaterBackroundSprite = spr.new(underwaterBackround)
@@ -179,9 +182,6 @@ function fadeAnimation()
 			gfx.setDitherPattern(fadeAnimationIndex)
 			gfx.fillRect(0, 0, 400, 240)
 			fadeAnimationIndex += 0.09
-			if fadeAnimationIndex <= 0 then
-				fadeAnimationSection = 1
-			end
 		end
 	end
 
@@ -241,6 +241,8 @@ function setupGame()
 		playdate.display.setRefreshRate(10)
 		underwaterMusic:pause()
 		bubblesSound:pause()
+
+
 	end
 
 	if underWater == true then
@@ -295,7 +297,7 @@ function buttonCheck()
 			soldFish = nil
 			fishHooked = nil
 			fishPreviouslyHooked = nil
-			fadeAnimationSection = 2
+			fadeAnimationSection = 1
 			fadeAnimationDone = false
 			fadeAnimationIndex = 1
 			sellAnimationDone = false
