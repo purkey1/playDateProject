@@ -160,9 +160,7 @@ function fadeAnimation()
 				gfx.fillRect(0, 0, 400, 240)
 				fadeAnimationIndex += 0.09
 			end
-	end
-
-	if underWater == true then
+	elseif underWater == true then
 		if fadeAnimationSection == 1 then
 			local sellBackround = gfx.image.new("assets/frame1BASE")
 			aboveWaterBackroundSprite = spr.new(sellBackround)
@@ -276,7 +274,7 @@ function setupGame()
 		underwaterBackroundSprite:add()
 
 		local randomFishcount = math.random(10, 20)
-		spawnFish(100)
+		spawnFish(randomFishcount)
 		print("Spawned: " .. randomFishcount .. " fish")
 	end
 	print("all sprites loaded")
