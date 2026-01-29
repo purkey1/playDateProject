@@ -185,6 +185,8 @@ function fadeAnimation()
 
 	if fadeAnimationIndex > 1 then
 		fadeAnimationDone = true
+		aboveWaterBackroundSprite = nil
+		underwaterBackroundSprite = nil
 		gfx.sprite.removeAll()
 		setupGame()
 	end
@@ -274,7 +276,7 @@ function setupGame()
 		underwaterBackroundSprite:add()
 
 		local randomFishcount = math.random(10, 20)
-		spawnFish(randomFishcount)
+		spawnFish(100)
 		print("Spawned: " .. randomFishcount .. " fish")
 	end
 	print("all sprites loaded")
