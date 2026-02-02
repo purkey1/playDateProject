@@ -49,14 +49,14 @@ local balance = 0
 
 -- fish raritys
 Fishys = {
-	Cod = { probability = 50 / 100, imgPath = "assets/Fish/Common-Cod", sellGifPath = "assets/Animations/cod", priceMin = "1", priceMax = "6" },                   --Common
-	Nemo = { probability = 20 / 100, imgPath = "assets/Fish/Rare-Nemo", sellGifPath = "assets/Animations/nemo", priceMin = "4", priceMax = "12" },                 --Rare
+	Cod = { probability = 50 / 100, imgPath = "assets/Fish/Common-Cod", sellGifPath = "assets/Animations/cod", priceMin = "1", priceMax = "6" },                      --Common
+	Clownfish = { probability = 20 / 100, imgPath = "assets/Fish/Rare-Clownfish", sellGifPath = "assets/Animations/clownfish", priceMin = "4", priceMax = "12" },     --Rare
 	Pufferfish = { probability = 15 / 100, imgPath = "assets/Fish/Epic-Pufferfish", sellGifPath = "assets/Animations/pufferfish", priceMin = "10", priceMax = "18" }, --Epic
-	Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Legendary-Octopus", sellGifPath = "assets/Animations/octopus", priceMin = "16", priceMax = "25" },   --Legendary
-	Angler = { probability = 4 / 100, imgPath = "assets/Fish/Mythical-Angler", sellGifPath = "assets/Animations/angler", priceMin = "23", priceMax = "31" },       --Mythical
-	Jellyfish = { probability = 2 / 100, imgPath = "assets/Fish/Insane-Jellyfish", sellGifPath = "assets/Animations/jellyfish", priceMin = "29", priceMax = "37" }, --Insane
-	Shark = { probability = 10000 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "assets/Animations/shark", priceMin = "35", priceMax = "43" },   --Unknown
-	SpongeBOB = { probability = 1 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "", priceMin = "100000", priceMax = "1000000" },                 --Unknown
+	Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Legendary-Octopus", sellGifPath = "assets/Animations/octopus", priceMin = "16", priceMax = "25" },      --Legendary
+	Angler = { probability = 4 / 100, imgPath = "assets/Fish/Mythical-Angler", sellGifPath = "assets/Animations/angler", priceMin = "23", priceMax = "31" },          --Mythical
+	Jellyfish = { probability = 2 / 100, imgPath = "assets/Fish/Insane-Jellyfish", sellGifPath = "assets/Animations/jellyfish", priceMin = "29", priceMax = "37" },   --Insane
+	Shark = { probability = 10000 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "assets/Animations/shark", priceMin = "35", priceMax = "43" },      --Unknown
+	SpongeBOB = { probability = 1 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "", priceMin = "100000", priceMax = "1000000" },                    --Unknown
 }
 
 local spawnedFish = {}
@@ -162,6 +162,9 @@ function fadeAnimation()
 			end
 	elseif underWater == true then
 		if fadeAnimationSection == 1 then
+			-- when fadeAnimationSection is equal to 1 it goes through this 
+			--untill the fadeAnimationIndex is less than 0 once it is
+			--it changes fadeAnimationSection equal to 2, which skips the first part and runs the else statement below
 			local sellBackround = gfx.image.new("assets/frame1BASE")
 			aboveWaterBackroundSprite = spr.new(sellBackround)
 			aboveWaterBackroundSprite:moveTo(200, 120)
@@ -182,7 +185,6 @@ function fadeAnimation()
 			fadeAnimationIndex += 0.09
 		end
 	end
-
 	if fadeAnimationIndex > 1 then
 		fadeAnimationDone = true
 		aboveWaterBackroundSprite = nil
@@ -190,7 +192,6 @@ function fadeAnimation()
 		gfx.sprite.removeAll()
 		setupGame()
 	end
-	
 end
 
 function sellAnimation()
@@ -219,9 +220,18 @@ function sellAnimation()
 		if #files == sellAnimationIndex then
 			coinAnimationDone = true
 			sellFish()
+			sellAnimationIndex = 1
 		end
 		sellAnimationIndex += 1
 	end
+	if balanceTextSprite then
+	balanceTextSprite:remove()
+	balanceTextSprite = nil
+	end
+	balanceTextSprite = spr.spriteWithText("Balance: " .. "*" .. balance .. "*", 100, 20)
+	balanceTextSprite:setCenter(0, 0)
+	balanceTextSprite:moveTo(5, 5)
+	balanceTextSprite:add()
 end
 
 function sellFish()
@@ -302,6 +312,7 @@ function buttonCheck()
 			fadeAnimationIndex = 1
 			sellAnimationDone = false
 			sellAnimationIndex = 1
+			coinAnimationDone = false
 			aboveWater = false
 			underWater = true
 			fadeAnimation()
@@ -323,11 +334,8 @@ function playdate.update()
 			fadeAnimation()
 		elseif coinAnimationDone == false then
 			sellAnimation()
-			balanceTextSprite = spr.spriteWithText("Balance: " .. "*" .. balance .. "*", 100, 20)
-			balanceTextSprite:setCenter(0, 0)
-			balanceTextSprite:moveTo(5, 5)
-			balanceTextSprite:add()
 			gfx.sprite.update()
+			
 		else
 			buttonCheck()
 			gfx.sprite.update()
@@ -336,6 +344,7 @@ function playdate.update()
 
 	if underWater == true then
 		if fadeAnimationDone == false then
+			gfx.sprite.update()
 			fadeAnimation()
 		else
 			-- Move hook with arrow keys
@@ -365,69 +374,69 @@ function playdate.update()
 			underwaterBackroundSprite:moveBy(0, -2 + reeling)
 			local bgY2 = underwaterBackroundSprite.y - bgY1
 
-			--limits scrolling underwaterbackround too far and moves fish with underwaterbackround
-			if underwaterBackroundSprite.y >= 1200 then
-				underwaterBackroundSprite:moveTo(200, 1199)
-				for _, fish in pairs(spawnedFish) do
-					-- Fish swimming left and right with facing the correct direction
-					fish:moveBy(fish.speedX, 0)
-					if fish.x > 350 then
-						fish.speedX = -fish.speedX
-						fish:setImageFlip(gfx.kImageUnflipped)
-						if fish == fishPreviouslyHooked then
-							fishPreviouslyHooked = nil
-						end
-					elseif fish.x < 50 then
-						fish.speedX = -fish.speedX
-						fish:setImageFlip(gfx.kImageFlippedX)
-						if fish == fishPreviouslyHooked then
-							fishPreviouslyHooked = nil
-						end
-					end
-				end
-			elseif underwaterBackroundSprite.y <= -960 then
-				underwaterBackroundSprite:moveTo(200, -959)
-				for _, fish in pairs(spawnedFish) do
-					-- Fish swimming left and right with facing the correct direction
-					fish:moveBy(fish.speedX, 0)
-					if fish.x > 350 then
-						fish.speedX = -fish.speedX
-						fish:setImageFlip(gfx.kImageUnflipped)
-						if fish == fishPreviouslyHooked then
-							fishPreviouslyHooked = nil
-						end
-					elseif fish.x < 50 then
-						fish.speedX = -fish.speedX
-						fish:setImageFlip(gfx.kImageFlippedX)
-						if fish == fishPreviouslyHooked then
-							fishPreviouslyHooked = nil
+				--limits scrolling underwaterbackround too far and moves fish with underwaterbackround
+				if underwaterBackroundSprite.y >= 1200 then
+					underwaterBackroundSprite:moveTo(200, 1199)
+					for _, fish in pairs(spawnedFish) do
+						-- Fish swimming left and right with facing the correct direction
+						fish:moveBy(fish.speedX, 0)
+						if fish.x > 350 then
+							fish.speedX = -fish.speedX
+							fish:setImageFlip(gfx.kImageUnflipped)
+							if fish == fishPreviouslyHooked then
+								fishPreviouslyHooked = nil
+							end
+						elseif fish.x < 50 then
+							fish.speedX = -fish.speedX
+							fish:setImageFlip(gfx.kImageFlippedX)
+							if fish == fishPreviouslyHooked then
+								fishPreviouslyHooked = nil
+							end
 						end
 					end
-				end
-			else
-				for _, fish in pairs(spawnedFish) do
-					if fishHooked ~= fish then
-						--Keep fish with underwaterBackroundSprite
-						fish:moveBy(0, bgY2)
+				elseif underwaterBackroundSprite.y <= -960 then
+					underwaterBackroundSprite:moveTo(200, -959)
+					for _, fish in pairs(spawnedFish) do
+						-- Fish swimming left and right with facing the correct direction
+						fish:moveBy(fish.speedX, 0)
+						if fish.x > 350 then
+							fish.speedX = -fish.speedX
+							fish:setImageFlip(gfx.kImageUnflipped)
+							if fish == fishPreviouslyHooked then
+								fishPreviouslyHooked = nil
+							end
+						elseif fish.x < 50 then
+							fish.speedX = -fish.speedX
+							fish:setImageFlip(gfx.kImageFlippedX)
+							if fish == fishPreviouslyHooked then
+								fishPreviouslyHooked = nil
+							end
+						end
 					end
+				else
+					for _, fish in pairs(spawnedFish) do
+						if fishHooked ~= fish then
+							--Keep fish with underwaterBackroundSprite
+							fish:moveBy(0, bgY2)
+						end
 
-					-- Fish swimming left and right with facing the correct direction
-					fish:moveBy(fish.speedX, 0)
-					if fish.x > 350 then
-						fish.speedX = -fish.speedX
-						fish:setImageFlip(gfx.kImageUnflipped)
-						if fish == fishPreviouslyHooked then
-							fishPreviouslyHooked = nil
-						end
-					elseif fish.x < 50 then
-						fish.speedX = -fish.speedX
-						fish:setImageFlip(gfx.kImageFlippedX)
-						if fish == fishPreviouslyHooked then
-							fishPreviouslyHooked = nil
+						-- Fish swimming left and right with facing the correct direction
+						fish:moveBy(fish.speedX, 0)
+						if fish.x > 350 then
+							fish.speedX = -fish.speedX
+							fish:setImageFlip(gfx.kImageUnflipped)
+							if fish == fishPreviouslyHooked then
+								fishPreviouslyHooked = nil
+							end
+						elseif fish.x < 50 then
+							fish.speedX = -fish.speedX
+							fish:setImageFlip(gfx.kImageFlippedX)
+							if fish == fishPreviouslyHooked then
+								fishPreviouslyHooked = nil
+							end
 						end
 					end
 				end
-			end
 
 			-- checks for selling
 			if underwaterBackroundSprite.y >= 1199 and fishHooked then
