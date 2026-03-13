@@ -47,6 +47,15 @@ local blanceIndex = 0
 -- stats
 local balance = 0
 
+-- catch fish minigame buttons
+Buttons = {
+	"Up";
+	"Down";
+	"Left";
+	"Right";
+}
+
+
 -- fish raritys
 Fishys = {
 	Cod = { probability = 50 / 100, imgPath = "assets/Fish/Common-Cod", sellGifPath = "assets/Animations/cod", priceMin = "1", priceMax = "6" },                      --Common
@@ -130,6 +139,35 @@ function collissionCheck()
 			end
 		end
 	end
+end
+
+function catchFishMiniGame(fish, difficulty)
+	--tracks how many times the player pressed the right button
+	local timesCompleated = 0
+	
+	while timesCompleated < difficulty do
+		--Gets random button from buttons list
+		local correctButton = Buttons[math.random(1, 4)]
+		--makes the image and sprite
+		local correctButtonImage = gfx.image.new("assets/Buttons/Dpad" .. correctButton)
+		correctButtonSprite = spr.new(correctButtonImage)
+
+		--gets an offset that is max 25 pixles and min 5 pixles away
+		while randomXoffset ~< -5 or randomXoffset ~> 5 do
+			local randomXoffset = math.random (-25, 25)
+		end
+		while randomYoffset ~< -5 or randomYoffset ~> 5 do
+			local randomYoffset = math.random (-25, 25)
+		end
+		--moves the sprite using the offset
+		correctButtonSprite:moveTo(fish.x + randomXoffset, fish.y + randomYoffset)
+
+		if playdate.buttonJustPressed == (string.lower(correctButton)) then
+			timesCompleated += 1
+		end
+	end
+	
+
 end
 
 function fadeAnimation()
