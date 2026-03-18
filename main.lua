@@ -12,6 +12,7 @@ local underwaterBackroundSprite = nil
 local aboveWaterBackroundSprite = nil
 local sellAnimationSprite = nil
 local balanceTextSprite = nil
+local buttonSprite = nil
 
 -- Sound
 local underwaterMusic = nil
@@ -49,10 +50,10 @@ local balance = 0
 
 -- catch fish minigame buttons
 Buttons = {
-	"Up";
-	"Down";
-	"Left";
-	"Right";
+	Up = { rotation = 0 },
+	Down = { rotation = 180 },
+	Left = { rotation = -90 },
+	Right = { rotation = 90 },
 }
 
 
@@ -129,12 +130,14 @@ function collissionCheck()
 			if fish == fishPreviouslyHooked then
 				return
 			else
+				catchFishMiniGame(fish, 5)
 				fishHooked = fish
 				fishHooked.speedX = 0
 				if fish.name ~= "Jellyfish" then
 					fishHooked:setRotation(90)
 				end
 				fishHooked:setCollideRect(0, 0, fishHooked:getSize())
+				
 				return
 			end
 		end
@@ -144,30 +147,44 @@ end
 function catchFishMiniGame(fish, difficulty)
 	--tracks how many times the player pressed the right button
 	local timesCompleated = 0
-	
-	while timesCompleated < difficulty do
-		--Gets random button from buttons list
-		local correctButton = Buttons[math.random(1, 4)]
-		--makes the image and sprite
-		local correctButtonImage = gfx.image.new("assets/Buttons/Dpad" .. correctButton)
-		correctButtonSprite = spr.new(correctButtonImage)
 
-		--gets an offset that is max 25 pixles and min 5 pixles away
-		while randomXoffset ~< -5 or randomXoffset ~> 5 do
-			local randomXoffset = math.random (-25, 25)
-		end
-		while randomYoffset ~< -5 or randomYoffset ~> 5 do
-			local randomYoffset = math.random (-25, 25)
-		end
-		--moves the sprite using the offset
-		correctButtonSprite:moveTo(fish.x + randomXoffset, fish.y + randomYoffset)
+	ButtonOptions = {
+		"Up",
+		"Down",
+		"Left",
+		"Right",
+	}
+	--Gets random button from buttons list
+	local correctButton = ButtonOptions[math.random(1, 4)]
+	local correctButtonData = Buttons[correctButton]
+	--makes the image and sprite
+	local buttonImage = gfx.image.new("assets/Buttons/DpadButton")
+	buttonSprite = spr.new(buttonImage)
+	buttonSprite:setRotation(correctButtonData.rotation)
 
-		if playdate.buttonJustPressed == (string.lower(correctButton)) then
-			timesCompleated += 1
-		end
+	--gets an offset that is max 25 pixles and min 5 pixles away
+	local randomXoffset = 0
+	local randomYoffset = 0
+
+	while randomXoffset < -5 or randomXoffset > 5 do
+		randomXoffset = math.random(-25, 25)
 	end
-	
 
+	while randomYoffset < -5 or randomYoffset > 5 do
+		randomYoffset = math.random(-25, 25)
+	end
+	--moves the sprite using the offset
+	buttonSprite:moveTo(fish.x + randomXoffset, fish.y + randomYoffset)
+
+	if playdate.buttonJustPressed == (string.lower(correctButton)) then
+		-- add one every time the correct button is pressed
+		timesCompleated += 1
+	end
+
+	if timesCompleated == difficulty then
+		--finish minigame 
+		return
+	end
 end
 
 function fadeAnimation()
@@ -283,7 +300,6 @@ end
 
 function setupGame()
 	gfx.clear()
-
 
 	if aboveWater == true then
 		playdate.display.setRefreshRate(10)
