@@ -6,6 +6,9 @@ local gfx = playdate.graphics
 local spr = gfx.sprite
 local sound = playdate.sound
 
+--settings
+local pauseGame = false
+
 -- Variables for our sprites
 local fishingHookSprite = nil
 local underwaterBackroundSprite = nil
@@ -48,12 +51,13 @@ local blanceIndex = 0
 -- stats
 local balance = 0
 
--- catch fish minigame buttons
+-- catch fish minigame
+local timesCompleated = 0
 Buttons = {
-	Up = { rotation = 0 },
-	Down = { rotation = 180 },
-	Left = { rotation = -90 },
-	Right = { rotation = 90 },
+	Up = { rotation = 0, name = "Up" },
+	Down = { rotation = 180, name = "Down" },
+	Left = { rotation = -90, name = "Left" },
+	Right = { rotation = 90, name = "Right" },
 }
 
 
@@ -130,61 +134,71 @@ function collissionCheck()
 			if fish == fishPreviouslyHooked then
 				return
 			else
+				print("152")
 				catchFishMiniGame(fish, 5)
-				fishHooked = fish
-				fishHooked.speedX = 0
-				if fish.name ~= "Jellyfish" then
-					fishHooked:setRotation(90)
-				end
-				fishHooked:setCollideRect(0, 0, fishHooked:getSize())
-				
-				return
+				print("252")
 			end
 		end
 	end
 end
 
 function catchFishMiniGame(fish, difficulty)
+	pauseGame = true
 	--tracks how many times the player pressed the right button
-	local timesCompleated = 0
-
+	
 	ButtonOptions = {
 		"Up",
 		"Down",
 		"Left",
 		"Right",
 	}
+	print("etsts")
+	print("1")
 	--Gets random button from buttons list
 	local correctButton = ButtonOptions[math.random(1, 4)]
 	local correctButtonData = Buttons[correctButton]
 	--makes the image and sprite
-	local buttonImage = gfx.image.new("assets/Buttons/DpadButton")
+	local buttonImage = gfx.image.new("assets/DpadButton")
 	buttonSprite = spr.new(buttonImage)
+	buttonSprite:add()
 	buttonSprite:setRotation(correctButtonData.rotation)
+	print("3")
 
 	--gets an offset that is max 25 pixles and min 5 pixles away
 	local randomXoffset = 0
 	local randomYoffset = 0
-
+	print("4")
 	while randomXoffset < -5 or randomXoffset > 5 do
 		randomXoffset = math.random(-25, 25)
+		print("changing x")
 	end
-
+	print("done changing x")
+	print(randomXoffset)
+	print("5")
 	while randomYoffset < -5 or randomYoffset > 5 do
 		randomYoffset = math.random(-25, 25)
 	end
 	--moves the sprite using the offset
-	buttonSprite:moveTo(fish.x + randomXoffset, fish.y + randomYoffset)
+	buttonSprite:moveTo(200, 120)
 
-	if playdate.buttonJustPressed == (string.lower(correctButton)) then
+
+	if playdate.buttonJustPressed == (string.lower(correctButtonData.name)) then
 		-- add one every time the correct button is pressed
 		timesCompleated += 1
 	end
 
 	if timesCompleated == difficulty then
 		--finish minigame 
-		return
+		pauseGame = false
+		fishHooked = fish
+		fishHooked.speedX = 0
+		if fish.name ~= "Jellyfish" then
+			fishHooked:setRotation(90)
+		end
+		fishHooked:setCollideRect(0, 0, fishHooked:getSize())
+		
 	end
+	return
 end
 
 function fadeAnimation()
@@ -401,34 +415,37 @@ function playdate.update()
 			gfx.sprite.update()
 			fadeAnimation()
 		else
-			-- Move hook with arrow keys
-			if playdate.buttonIsPressed(playdate.kButtonRight) then
-				fishingHookSprite:moveWithCollisions(fishingHookSprite.x + 5, 50)
-			elseif playdate.buttonIsPressed(playdate.kButtonLeft) then
-				fishingHookSprite:moveWithCollisions(fishingHookSprite.x - 5, 50)
-			end
+			print(pauseGame)
+			if pauseGame == false then
+				-- Move hook with arrow keys
+				if playdate.buttonIsPressed(playdate.kButtonRight) then
+					fishingHookSprite:moveWithCollisions(fishingHookSprite.x + 5, 50)
+				elseif playdate.buttonIsPressed(playdate.kButtonLeft) then
+					fishingHookSprite:moveWithCollisions(fishingHookSprite.x - 5, 50)
+				end
 
-			--Limits hook going off screen
-			if fishingHookSprite.x >= 375 then
-				fishingHookSprite:moveWithCollisions(374, 50)
-			elseif fishingHookSprite.x <= 25 then
-				fishingHookSprite:moveWithCollisions(26, 50)
-			end
+				--Limits hook going off screen
+				if fishingHookSprite.x >= 375 then
+					fishingHookSprite:moveWithCollisions(374, 50)
+				elseif fishingHookSprite.x <= 25 then
+					fishingHookSprite:moveWithCollisions(26, 50)
+				end
 
-			--Check for collission with fishingHookSprite
-			if fishHooked then
-				fishHooked:moveWithCollisions(fishingHookSprite.x, 187.5)
-				buttonCheck()
-			else
-				collissionCheck()
-			end
+				--Check for collission with fishingHookSprite
+				if fishHooked then
+					fishHooked:moveWithCollisions(fishingHookSprite.x, 187.5)
+					buttonCheck()
+				else
+					collissionCheck()
+				end
 
-			-- scroll underwaterbackround with crank
-			local bgY1 = underwaterBackroundSprite.y
-			underwaterBackroundSprite:moveBy(0, -2 + reeling)
-			local bgY2 = underwaterBackroundSprite.y - bgY1
+				
+				-- scroll underwaterbackround with crank
+				local bgY1 = underwaterBackroundSprite.y
+				underwaterBackroundSprite:moveBy(0, -2 + reeling)
+				local bgY2 = underwaterBackroundSprite.y - bgY1
 
-				--limits scrolling underwaterbackround too far and moves fish with underwaterbackround
+					--limits scrolling underwaterbackround too far and moves fish with underwaterbackround
 				if underwaterBackroundSprite.y >= 1200 then
 					underwaterBackroundSprite:moveTo(200, 1199)
 					for _, fish in pairs(spawnedFish) do
@@ -437,7 +454,7 @@ function playdate.update()
 						if fish.x > 350 then
 							fish.speedX = -fish.speedX
 							fish:setImageFlip(gfx.kImageUnflipped)
-							if fish == fishPreviouslyHooked then
+								if fish == fishPreviouslyHooked then
 								fishPreviouslyHooked = nil
 							end
 						elseif fish.x < 50 then
@@ -477,7 +494,7 @@ function playdate.update()
 						-- Fish swimming left and right with facing the correct direction
 						fish:moveBy(fish.speedX, 0)
 						if fish.x > 350 then
-							fish.speedX = -fish.speedX
+						fish.speedX = -fish.speedX
 							fish:setImageFlip(gfx.kImageUnflipped)
 							if fish == fishPreviouslyHooked then
 								fishPreviouslyHooked = nil
@@ -491,18 +508,19 @@ function playdate.update()
 						end
 					end
 				end
-
-			-- checks for selling
-			if underwaterBackroundSprite.y >= 1199 and fishHooked then
-				soldFish = fishHooked
-				fishHooked = nil
-				underwaterMusic:pause()
-				bubblesSound:pause()
-				underWater = false
-				aboveWater = true
-				fadeAnimationSection = 1
-				fadeAnimationDone = false
-				fadeAnimation()
+				
+				-- checks for selling
+				if underwaterBackroundSprite.y >= 1199 and fishHooked then
+					soldFish = fishHooked
+					fishHooked = nil
+					underwaterMusic:pause()
+					bubblesSound:pause()
+					underWater = false
+					aboveWater = true
+					fadeAnimationSection = 1
+					fadeAnimationDone = false
+					fadeAnimation()
+				end
 			end
 			-- Update all sprites
 			gfx.sprite.update()
