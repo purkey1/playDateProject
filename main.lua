@@ -1,5 +1,6 @@
 import("CoreLibs/graphics")
 import("CoreLibs/sprites")
+import "CoreLibs/timer"
 
 local animation = playdate.graphics.animation
 local gfx = playdate.graphics
@@ -8,6 +9,10 @@ local sound = playdate.sound
 
 --settings
 local pauseGame = false
+
+-- Timers
+local buttonCheckTimer = nil
+local timeLimit = nil
 
 -- Variables for our sprites
 local fishingHookSprite = nil
@@ -53,6 +58,10 @@ local balance = 0
 
 -- catch fish minigame
 local timesCompleated = 0
+local correctButtonData = nil
+local waitingForButton = false
+local correctButtonPressed = false
+
 Buttons = {
 	Up = { rotation = 0, name = "Up" },
 	Down = { rotation = 180, name = "Down" },
@@ -134,9 +143,7 @@ function collissionCheck()
 			if fish == fishPreviouslyHooked then
 				return
 			else
-				print("152")
-				catchFishMiniGame(fish, 5)
-				print("252")
+				catchFishMiniGame(fish, 1)
 			end
 		end
 	end
@@ -144,7 +151,8 @@ end
 
 function catchFishMiniGame(fish, difficulty)
 	pauseGame = true
-	--tracks how many times the player pressed the right button
+
+	
 	
 	ButtonOptions = {
 		"Up",
@@ -152,40 +160,82 @@ function catchFishMiniGame(fish, difficulty)
 		"Left",
 		"Right",
 	}
-	print("etsts")
-	print("1")
-	--Gets random button from buttons list
-	local correctButton = ButtonOptions[math.random(1, 4)]
-	local correctButtonData = Buttons[correctButton]
-	--makes the image and sprite
-	local buttonImage = gfx.image.new("assets/DpadButton")
-	buttonSprite = spr.new(buttonImage)
-	buttonSprite:add()
-	buttonSprite:setRotation(correctButtonData.rotation)
-	print("3")
 
-	--gets an offset that is max 25 pixles and min 5 pixles away
-	local randomXoffset = 0
-	local randomYoffset = 0
-	print("4")
-	while randomXoffset < -5 or randomXoffset > 5 do
+		--Gets random button from buttons list
+		local correctButton = ButtonOptions[math.random(1, 4)]
+		correctButtonData = Buttons[correctButton]
+		printTable(correctButtonData)
+		--makes the image and sprite
+		local buttonImage = gfx.image.new("assets/Misc/DpadButton")
+		buttonSprite = spr.new(buttonImage)
+		buttonSprite:add()
+		buttonSprite:setRotation(correctButtonData.rotation)
+
+		--gets an offset that is max 25 pixles and min 5 pixles away
+		local randomXoffset = 0
+		local randomYoffset = 0
+
 		randomXoffset = math.random(-25, 25)
-		print("changing x")
-	end
-	print("done changing x")
-	print(randomXoffset)
-	print("5")
-	while randomYoffset < -5 or randomYoffset > 5 do
 		randomYoffset = math.random(-25, 25)
-	end
-	--moves the sprite using the offset
-	buttonSprite:moveTo(200, 120)
+
+		if randomXoffset > -5 and randomXoffset < 5 then
+			randomXoffset = randomXoffset + 5
+		end
+		if randomYoffset > -5 and randomYoffset < 5 then
+			randomYoffset = randomYoffset + 5
+		end
+
+		--moves the sprite using the offset
+		buttonSprite:moveTo(200, 120)
+
+		-- Wait for the correct button to be pressed before moving only
+
+		timeLimit = playdate.timer.new(5000, 0, 5000)
+
+		local function waitForButton()
+			if correctButtonPressed == false then
+				print(timeLimit.currentTime)
+				if timeLimit == false then
+					
+					timeLimit = nil
+					buttonCheckTimer = nil
+					print("time ran out")
+				end
+			end
+			
+			if playdate.buttonJustPressed(string.lower(correctButtonData.name)) then
+				correctButtonPressed = true
+				waitingForButton = false
+				buttonCheckTimer = nil
+				timesCompleated += 1
+				print("correct button pressed")
+				return
+			end
+		end
+
+		
+		buttonCheckTimer = playdate.timer.keyRepeatTimerWithDelay(2, 2, waitForButton)
+		
 
 
-	if playdate.buttonJustPressed == (string.lower(correctButtonData.name)) then
-		-- add one every time the correct button is pressed
-		timesCompleated += 1
-	end
+
+
+
+
+
+
+		
+
+
+
+
+
+
+
+
+
+
+
 
 	if timesCompleated == difficulty then
 		--finish minigame 
@@ -196,9 +246,10 @@ function catchFishMiniGame(fish, difficulty)
 			fishHooked:setRotation(90)
 		end
 		fishHooked:setCollideRect(0, 0, fishHooked:getSize())
-		
+	else
+		--playdate.wait(17)
+		--catchFishMiniGame(fish, difficulty)
 	end
-	return
 end
 
 function fadeAnimation()
@@ -210,7 +261,7 @@ function fadeAnimation()
 				-- when fadeAnimationSection is equal to 1 it goes through this 
 				--untill the fadeAnimationIndex is less than 0 once it is
 				--it changes fadeAnimationSection equal to 2, which skips the first part and runs the else statement below
-				local underwaterBackround = gfx.image.new("assets/FishyFishyUnderwater")
+				local underwaterBackround = gfx.image.new("assets/Backrounds/FishyFishyUnderwater")
 				underwaterBackroundSprite = spr.new(underwaterBackround)
 				underwaterBackroundSprite:moveTo(200, 1200)
 				underwaterBackroundSprite:add()
@@ -221,7 +272,7 @@ function fadeAnimation()
 					fadeAnimationSection = 2
 				end
 			else
-				local sellBackround = gfx.image.new("assets/frame1BASE")
+				local sellBackround = gfx.image.new("assets/Backrounds/frame1BASE")
 				aboveWaterBackroundSprite = spr.new(sellBackround)
 				aboveWaterBackroundSprite:moveTo(200, 120)
 				aboveWaterBackroundSprite:add()
@@ -234,7 +285,7 @@ function fadeAnimation()
 			-- when fadeAnimationSection is equal to 1 it goes through this 
 			--untill the fadeAnimationIndex is less than 0 once it is
 			--it changes fadeAnimationSection equal to 2, which skips the first part and runs the else statement below
-			local sellBackround = gfx.image.new("assets/frame1BASE")
+			local sellBackround = gfx.image.new("assets/Backrounds/frame1BASE")
 			aboveWaterBackroundSprite = spr.new(sellBackround)
 			aboveWaterBackroundSprite:moveTo(200, 120)
 			aboveWaterBackroundSprite:add()
@@ -245,7 +296,7 @@ function fadeAnimation()
 				fadeAnimationSection = 2
 			end
 		else
-			local underwaterBackround = gfx.image.new("assets/FishyFishyUnderwater")
+			local underwaterBackround = gfx.image.new("assets/Backrounds/FishyFishyUnderwater")
 			underwaterBackroundSprite = spr.new(underwaterBackround)
 			underwaterBackroundSprite:moveTo(200, 1200)
 			underwaterBackroundSprite:add()
@@ -326,8 +377,8 @@ function setupGame()
 	if underWater == true then
 		playdate.display.setRefreshRate(30)
 		-- Load images
-		local underWaterBackround = gfx.image.new("assets/FishyFishyUnderwater")
-		local fishingHook = gfx.image.new("assets/fishhook2")
+		local underWaterBackround = gfx.image.new("assets/Backrounds/FishyFishyUnderwater")
+		local fishingHook = gfx.image.new("assets/Misc/fishhook")
 
 		-- load and play music/sounds
 		underwaterMusic = sound.fileplayer.new("assets/Audio/underwaterMusic")
@@ -388,9 +439,18 @@ function buttonCheck()
 	end
 end
 
+function waitForButton()
+	
+end
+
 function playdate.update()
 	-- Clear screen
-	gfx.clear()
+	--gfx.clear()
+	playdate.timer.updateTimers()
+	
+	if waitingForButton == true then
+		--waitForButton()
+	end
 
 	--get crank pos
 	crankChange = playdate.getCrankChange()
@@ -415,7 +475,6 @@ function playdate.update()
 			gfx.sprite.update()
 			fadeAnimation()
 		else
-			print(pauseGame)
 			if pauseGame == false then
 				-- Move hook with arrow keys
 				if playdate.buttonIsPressed(playdate.kButtonRight) then
