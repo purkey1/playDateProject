@@ -13,6 +13,7 @@ local pauseGame = false
 -- Timers
 local buttonCheckTimer = nil
 local timeLimit = nil
+local swimAway = nil
 
 -- Variables for our sprites
 local fishingHookSprite = nil
@@ -59,7 +60,6 @@ local balance = 0
 -- catch fish minigame
 local timesCompleated = 0
 local correctButtonData = nil
-local waitingForButton = false
 local correctButtonPressed = false
 
 Buttons = {
@@ -143,7 +143,7 @@ function collissionCheck()
 			if fish == fishPreviouslyHooked then
 				return
 			else
-				catchFishMiniGame(fish, 1)
+				catchFishMiniGame(fish, 5)
 			end
 		end
 	end
@@ -175,14 +175,14 @@ function catchFishMiniGame(fish, difficulty)
 		local randomXoffset = 0
 		local randomYoffset = 0
 
-		randomXoffset = math.random(-25, 25)
-		randomYoffset = math.random(-25, 25)
+		randomXoffset = math.random(-50, 50)
+		randomYoffset = math.random(-50, 50)
 
-		if randomXoffset > -5 and randomXoffset < 5 then
-			randomXoffset = randomXoffset + 5
+		if randomXoffset > -15 and randomXoffset < 15 then
+			randomXoffset = randomXoffset + 15
 		end
-		if randomYoffset > -5 and randomYoffset < 5 then
-			randomYoffset = randomYoffset + 5
+		if randomYoffset > -15 and randomYoffset < 15 then
+			randomYoffset = randomYoffset + 15
 		end
 
 		--moves the sprite using the offset
@@ -190,66 +190,64 @@ function catchFishMiniGame(fish, difficulty)
 
 		-- Wait for the correct button to be pressed before moving only
 
-		timeLimit = playdate.timer.new(5000, 0, 5000)
+		timeLimit = playdate.timer.new(5000, function()
+				timeLimit = nil
+				buttonCheckTimer:remove()
+				buttonCheckTimer = nil
+				buttonSprite:remove()
+				buttonSprite = nil
+				pauseGame = false
+				print("time ran out")
+				--local width, height = fish:getSize()
+				swimAway = playdate.timer.keyRepeatTimerWithDelay(20, 20, function ()
+					local width, height = fish:getSize()
+					if width <= 0 then
+						fish:remove()
+						swimAway:remove()
+						swimAway = nil
+					elseif height <= 0 then
+						fish:remove()
+						swimAway:remove()
+						swimAway = nil
+					end
+					fish:setSize(width - 4, height - 4)
+					fish:setCollideRect(0, 0, fish:getSize())
+				end)
+		end)
 
 		local function waitForButton()
-			if correctButtonPressed == false then
-				print(timeLimit.currentTime)
-				if timeLimit == false then
-					
-					timeLimit = nil
-					buttonCheckTimer = nil
-					print("time ran out")
-				end
-			end
-			
+
 			if playdate.buttonJustPressed(string.lower(correctButtonData.name)) then
+				if buttonCheckTimer then
+					buttonCheckTimer:remove()
+				end
 				correctButtonPressed = true
-				waitingForButton = false
 				buttonCheckTimer = nil
+				timeLimit = nil
 				timesCompleated += 1
 				print("correct button pressed")
+
+				buttonSprite:remove()
+				buttonSprite = nil
+
+				if timesCompleated == difficulty then
+					--finish minigame 
+					pauseGame = false
+					timesCompleated = 0
+					fishHooked = fish
+					fishHooked.speedX = 0
+					if fish.name ~= "Jellyfish" then
+						fishHooked:setRotation(90)
+					end
+					fishHooked:setCollideRect(0, 0, fishHooked:getSize())
+				else
+					catchFishMiniGame(fish, difficulty)
+				end
 				return
 			end
 		end
 
-		
 		buttonCheckTimer = playdate.timer.keyRepeatTimerWithDelay(2, 2, waitForButton)
-		
-
-
-
-
-
-
-
-
-		
-
-
-
-
-
-
-
-
-
-
-
-
-	if timesCompleated == difficulty then
-		--finish minigame 
-		pauseGame = false
-		fishHooked = fish
-		fishHooked.speedX = 0
-		if fish.name ~= "Jellyfish" then
-			fishHooked:setRotation(90)
-		end
-		fishHooked:setCollideRect(0, 0, fishHooked:getSize())
-	else
-		--playdate.wait(17)
-		--catchFishMiniGame(fish, difficulty)
-	end
 end
 
 function fadeAnimation()
@@ -439,18 +437,10 @@ function buttonCheck()
 	end
 end
 
-function waitForButton()
-	
-end
-
 function playdate.update()
 	-- Clear screen
 	--gfx.clear()
 	playdate.timer.updateTimers()
-	
-	if waitingForButton == true then
-		--waitForButton()
-	end
 
 	--get crank pos
 	crankChange = playdate.getCrankChange()
