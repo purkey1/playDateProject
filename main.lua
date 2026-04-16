@@ -61,6 +61,7 @@ local balance = 0
 local timesCompleated = 0
 local correctButtonData = nil
 local correctButtonPressed = false
+local currentMinigameFish = nil
 
 Buttons = {
 	Up = { rotation = 0, name = "Up" },
@@ -103,6 +104,9 @@ function spawnFish(count)
 		local fishImg = gfx.image.new(fishData.imgPath)
 		fishSprite = spr.new(fishImg)
 		fishSprite.name = fishName
+		--set center
+		local width, height = fishSprite:getSize()
+		fishSprite:setCenter(0.5, 0.5)
 		--add collission
 		fishSprite:setCollideRect(0, 0, fishSprite:getSize())
 		fishSprite.collisionResponse = spr.kCollisionTypeOverlap
@@ -143,7 +147,10 @@ function collissionCheck()
 			if fish == fishPreviouslyHooked then
 				return
 			else
-				catchFishMiniGame(fish, 5)
+				if currentMinigameFish == nil then
+					currentMinigameFish = fish
+					catchFishMiniGame(fish, 100)
+				end
 			end
 		end
 	end
@@ -175,18 +182,35 @@ function catchFishMiniGame(fish, difficulty)
 		local randomXoffset = 0
 		local randomYoffset = 0
 
-		randomXoffset = math.random(-50, 50)
-		randomYoffset = math.random(-50, 50)
+		randomXoffset = math.random(-40, 40)
+		randomYoffset = math.random(-40, 40)
 
-		if randomXoffset > -15 and randomXoffset < 15 then
-			randomXoffset = randomXoffset + 15
+		local width, height = fish:getSize()
+		local halfWidth = width / 2
+		local halfHeight = height / 2
+		local fishPosEdgeX = fish.x + halfWidth
+		local fishPosEdgeY = fish.y + halfHeight
+
+		if randomXoffset > fish.x and randomXoffset < fishPosEdgeX then
+			randomXoffset = randomXoffset + 25
 		end
-		if randomYoffset > -15 and randomYoffset < 15 then
-			randomYoffset = randomYoffset + 15
+
+		if randomYoffset > fish.y and randomYoffset < fishPosEdgeY then
+			randomYoffset = randomYoffset + 25
 		end
+
+		local xOffset = fish.x + randomXoffset
+		local yOffset = fish.y + randomYoffset
+
+		print(fishPosEdgeX)
+		print(fishPosEdgeY)
+		print(xOffset)
+		print(yOffset)
+		print(fish.x)
+		print(fish.y)
 
 		--moves the sprite using the offset
-		buttonSprite:moveTo(200, 120)
+		buttonSprite:moveTo(fish.x, fish.y)
 
 		-- Wait for the correct button to be pressed before moving only
 
@@ -196,20 +220,24 @@ function catchFishMiniGame(fish, difficulty)
 				buttonCheckTimer = nil
 				buttonSprite:remove()
 				buttonSprite = nil
-				pauseGame = false
+				currentMinigameFish = nil
 				print("time ran out")
 				--local width, height = fish:getSize()
 				swimAway = playdate.timer.keyRepeatTimerWithDelay(20, 20, function ()
 					local width, height = fish:getSize()
+					if swimAway then
 					if width <= 0 then
 						fish:remove()
 						swimAway:remove()
 						swimAway = nil
+						pauseGame = false
 					elseif height <= 0 then
 						fish:remove()
 						swimAway:remove()
 						swimAway = nil
+						pauseGame = false
 					end
+				end
 					fish:setSize(width - 4, height - 4)
 					fish:setCollideRect(0, 0, fish:getSize())
 				end)
@@ -221,6 +249,9 @@ function catchFishMiniGame(fish, difficulty)
 				if buttonCheckTimer then
 					buttonCheckTimer:remove()
 				end
+				if timeLimit then
+					timeLimit:remove()
+				end
 				correctButtonPressed = true
 				buttonCheckTimer = nil
 				timeLimit = nil
@@ -230,16 +261,22 @@ function catchFishMiniGame(fish, difficulty)
 				buttonSprite:remove()
 				buttonSprite = nil
 
+				local minigameDone = false
 				if timesCompleated == difficulty then
-					--finish minigame 
-					pauseGame = false
-					timesCompleated = 0
-					fishHooked = fish
-					fishHooked.speedX = 0
-					if fish.name ~= "Jellyfish" then
-						fishHooked:setRotation(90)
+					if minigameDone == false then
+						minigameDone = true
+						--finish minigame 
+						
+						currentMinigameFish = nil
+						pauseGame = false
+						timesCompleated = 0
+						fishHooked = fish
+						fishHooked.speedX = 0
+						if fish.name ~= "Jellyfish" then
+							fishHooked:setRotation(90)
+						end
+						fishHooked:setCollideRect(0, 0, fishHooked:getSize())
 					end
-					fishHooked:setCollideRect(0, 0, fishHooked:getSize())
 				else
 					catchFishMiniGame(fish, difficulty)
 				end
