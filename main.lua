@@ -171,46 +171,62 @@ function catchFishMiniGame(fish, difficulty)
 		--Gets random button from buttons list
 		local correctButton = ButtonOptions[math.random(1, 4)]
 		correctButtonData = Buttons[correctButton]
-		printTable(correctButtonData)
 		--makes the image and sprite
 		local buttonImage = gfx.image.new("assets/Misc/DpadButton")
 		buttonSprite = spr.new(buttonImage)
 		buttonSprite:add()
 		buttonSprite:setRotation(correctButtonData.rotation)
 
-		--gets an offset that is max 25 pixles and min 5 pixles away
-		local randomXoffset = 0
-		local randomYoffset = 0
+			--gets an offset that is max 25 pixles and min 5 pixles away
+			local randomXoffset = 0
+			local randomYoffset = 0
 
-		randomXoffset = math.random(-40, 40)
-		randomYoffset = math.random(-40, 40)
+			local width, height = fish:getSize()
+			local halfWidth = width / 2
+			local halfHeight = height / 2
 
-		local width, height = fish:getSize()
-		local halfWidth = width / 2
-		local halfHeight = height / 2
-		local fishPosEdgeX = fish.x + halfWidth
-		local fishPosEdgeY = fish.y + halfHeight
+			randomXoffset = math.random(40)
+			randomYoffset = math.random(40)
 
-		if randomXoffset > fish.x and randomXoffset < fishPosEdgeX then
-			randomXoffset = randomXoffset + 25
+			if randomXoffset < halfWidth then
+				randomXoffset = halfWidth + 25
+			end
+
+			if randomYoffset < halfHeight then
+				randomXoffset = halfWidth + 25
+			end
+
+			local xOffset = fish.x + randomXoffset
+			local yOffset = fish.y + randomYoffset
+
+			local direction = math.random(4)
+
+			if xOffset > 375 then
+				direction = math.random(3, 4)
+				print("Moved 1")
+			elseif xOffset < 25 then
+				direction = math.random(2)
+				print("Moved 2")
+			end
+
+			if yOffset > 215 then
+				direction = 1
+				print("Moved 3")
+			elseif yOffset < 25 then
+				direction = 3
+				print("Moved 4")
+			end
+
+		--moves the sprite using the offset with random posotive or negative
+		if direction == 1 then
+			buttonSprite:moveTo(fish.x + randomXoffset, fish.y + randomYoffset)
+		elseif direction == 2 then
+			buttonSprite:moveTo(fish.x + randomXoffset, fish.y - randomYoffset)
+		elseif direction == 3 then
+			buttonSprite:moveTo(fish.x - randomXoffset, fish.y - randomYoffset)
+		else
+			buttonSprite:moveTo(fish.x - randomXoffset, fish.y + randomYoffset)
 		end
-
-		if randomYoffset > fish.y and randomYoffset < fishPosEdgeY then
-			randomYoffset = randomYoffset + 25
-		end
-
-		local xOffset = fish.x + randomXoffset
-		local yOffset = fish.y + randomYoffset
-
-		print(fishPosEdgeX)
-		print(fishPosEdgeY)
-		print(xOffset)
-		print(yOffset)
-		print(fish.x)
-		print(fish.y)
-
-		--moves the sprite using the offset
-		buttonSprite:moveTo(fish.x, fish.y)
 
 		-- Wait for the correct button to be pressed before moving only
 
@@ -256,7 +272,6 @@ function catchFishMiniGame(fish, difficulty)
 				buttonCheckTimer = nil
 				timeLimit = nil
 				timesCompleated += 1
-				print("correct button pressed")
 
 				buttonSprite:remove()
 				buttonSprite = nil
