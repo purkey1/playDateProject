@@ -60,8 +60,8 @@ local balance = 0
 -- catch fish minigame
 local timesCompleated = 0
 local correctButtonData = nil
-local correctButtonPressed = false
 local currentMinigameFish = nil
+local correctButtonPressed = true
 
 Buttons = {
 	Up = { rotation = 0, name = "Up" },
@@ -73,14 +73,14 @@ Buttons = {
 
 -- fish raritys
 Fishys = {
-	Cod = { probability = 50 / 100, imgPath = "assets/Fish/Common-Cod", sellGifPath = "assets/Animations/cod", priceMin = "1", priceMax = "6" },                      --Common
-	Clownfish = { probability = 20 / 100, imgPath = "assets/Fish/Rare-Clownfish", sellGifPath = "assets/Animations/clownfish", priceMin = "4", priceMax = "12" },     --Rare
-	Pufferfish = { probability = 15 / 100, imgPath = "assets/Fish/Epic-Pufferfish", sellGifPath = "assets/Animations/pufferfish", priceMin = "10", priceMax = "18" }, --Epic
-	Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Legendary-Octopus", sellGifPath = "assets/Animations/octopus", priceMin = "16", priceMax = "25" },      --Legendary
-	Angler = { probability = 4 / 100, imgPath = "assets/Fish/Mythical-Angler", sellGifPath = "assets/Animations/angler", priceMin = "23", priceMax = "31" },          --Mythical
-	Jellyfish = { probability = 2 / 100, imgPath = "assets/Fish/Insane-Jellyfish", sellGifPath = "assets/Animations/jellyfish", priceMin = "29", priceMax = "37" },   --Insane
-	Shark = { probability = 10000 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "assets/Animations/shark", priceMin = "35", priceMax = "43" },      --Unknown
-	SpongeBOB = { probability = 1 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "", priceMin = "100000", priceMax = "1000000" },                    --Unknown
+	Cod = { probability = 50 / 100, imgPath = "assets/Fish/Common-Cod", sellGifPath = "assets/Animations/cod", catchDificulty = "2", priceMin = "1", priceMax = "6" },                      --Common
+	Clownfish = { probability = 20 / 100, imgPath = "assets/Fish/Rare-Clownfish", sellGifPath = "assets/Animations/clownfish", catchDificulty = "4", priceMin = "4", priceMax = "12" },     --Rare
+	Pufferfish = { probability = 15 / 100, imgPath = "assets/Fish/Epic-Pufferfish", sellGifPath = "assets/Animations/pufferfish", catchDificulty = "7", priceMin = "10", priceMax = "18" }, --Epic
+	Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Legendary-Octopus", sellGifPath = "assets/Animations/octopus", catchDificulty = "9", priceMin = "16", priceMax = "25" },      --Legendary
+	Angler = { probability = 4 / 100, imgPath = "assets/Fish/Mythical-Angler", sellGifPath = "assets/Animations/angler", catchDificulty = "11", priceMin = "23", priceMax = "31" },          --Mythical
+	Jellyfish = { probability = 2 / 100, imgPath = "assets/Fish/Insane-Jellyfish", sellGifPath = "assets/Animations/jellyfish", catchDificulty = "14", priceMin = "29", priceMax = "37" },   --Insane
+	Shark = { probability = 10000 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "assets/Animations/shark", catchDificulty = "17", priceMin = "35", priceMax = "43" },      --Unknown
+	SpongeBOB = { probability = 1 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "", priceMin = "100000", catchDificulty = "30", priceMax = "1000000" },                    --Unknown
 }
 
 local spawnedFish = {}
@@ -149,7 +149,9 @@ function collissionCheck()
 			else
 				if currentMinigameFish == nil then
 					currentMinigameFish = fish
-					catchFishMiniGame(fish, 100)
+					local fishData = Fishys[fish.name]
+					local difficulty = tonumber(fishData.catchDificulty)
+					catchFishMiniGame(fish, difficulty)
 				end
 			end
 		end
@@ -158,8 +160,6 @@ end
 
 function catchFishMiniGame(fish, difficulty)
 	pauseGame = true
-
-	
 	
 	ButtonOptions = {
 		"Up",
@@ -203,18 +203,14 @@ function catchFishMiniGame(fish, difficulty)
 
 			if xOffset > 375 then
 				direction = math.random(3, 4)
-				print("Moved 1")
 			elseif xOffset < 25 then
 				direction = math.random(2)
-				print("Moved 2")
 			end
 
 			if yOffset > 215 then
 				direction = 1
-				print("Moved 3")
 			elseif yOffset < 25 then
 				direction = 3
-				print("Moved 4")
 			end
 
 		--moves the sprite using the offset with random posotive or negative
@@ -229,7 +225,7 @@ function catchFishMiniGame(fish, difficulty)
 		end
 
 		-- Wait for the correct button to be pressed before moving only
-
+		local currentScale = 1
 		timeLimit = playdate.timer.new(5000, function()
 				timeLimit = nil
 				buttonCheckTimer:remove()
@@ -238,64 +234,61 @@ function catchFishMiniGame(fish, difficulty)
 				buttonSprite = nil
 				currentMinigameFish = nil
 				print("time ran out")
-				--local width, height = fish:getSize()
 				swimAway = playdate.timer.keyRepeatTimerWithDelay(20, 20, function ()
-					local width, height = fish:getSize()
-					if swimAway then
-					if width <= 0 then
-						fish:remove()
-						swimAway:remove()
-						swimAway = nil
-						pauseGame = false
-					elseif height <= 0 then
+				if swimAway then
+					if currentScale <= 0 then
 						fish:remove()
 						swimAway:remove()
 						swimAway = nil
 						pauseGame = false
 					end
 				end
-					fish:setSize(width - 4, height - 4)
+					fish:setScale(currentScale - 0.07, currentScale - 0.07)
+					currentScale -= 0.07
 					fish:setCollideRect(0, 0, fish:getSize())
 				end)
 		end)
 
 		local function waitForButton()
-
 			if playdate.buttonJustPressed(string.lower(correctButtonData.name)) then
-				if buttonCheckTimer then
-					buttonCheckTimer:remove()
-				end
-				if timeLimit then
-					timeLimit:remove()
-				end
-				correctButtonPressed = true
-				buttonCheckTimer = nil
-				timeLimit = nil
-				timesCompleated += 1
-
-				buttonSprite:remove()
-				buttonSprite = nil
-
-				local minigameDone = false
-				if timesCompleated == difficulty then
-					if minigameDone == false then
-						minigameDone = true
-						--finish minigame 
-						
-						currentMinigameFish = nil
-						pauseGame = false
-						timesCompleated = 0
-						fishHooked = fish
-						fishHooked.speedX = 0
-						if fish.name ~= "Jellyfish" then
-							fishHooked:setRotation(90)
-						end
-						fishHooked:setCollideRect(0, 0, fishHooked:getSize())
+				if correctButtonPressed == false then
+					correctButtonPressed = true
+					if buttonCheckTimer then
+						buttonCheckTimer:remove()
 					end
-				else
-					catchFishMiniGame(fish, difficulty)
+					if timeLimit then
+						timeLimit:remove()
+					end
+					buttonCheckTimer = nil
+					timeLimit = nil
+					timesCompleated += 1
+					buttonSprite:remove()
+					buttonSprite = nil
+
+					local minigameDone = false
+					if timesCompleated >= difficulty then
+						if minigameDone == false then
+							minigameDone = true
+							--finish minigame 
+							
+							currentMinigameFish = nil
+							pauseGame = false
+							timesCompleated = 0
+							fishHooked = fish
+							fishHooked.speedX = 0
+							if fish.name ~= "Jellyfish" then
+								fishHooked:setRotation(90)
+							end
+							fishHooked:setCollideRect(0, 0, fishHooked:getSize())
+						end
+					else
+						print(timesCompleated)
+						catchFishMiniGame(fish, difficulty)
+					end
+					return
 				end
-				return
+			else
+				correctButtonPressed = false
 			end
 		end
 
@@ -309,8 +302,8 @@ function fadeAnimation()
 	if aboveWater == true then
 			if fadeAnimationSection == 1 then
 				-- when fadeAnimationSection is equal to 1 it goes through this 
-				--untill the fadeAnimationIndex is less than 0 once it is
-				--it changes fadeAnimationSection equal to 2, which skips the first part and runs the else statement below
+				-- untill the fadeAnimationIndex is less than 0 once it is
+				-- it changes fadeAnimationSection equal to 2, which skips the first part and runs the else statement below
 				local underwaterBackround = gfx.image.new("assets/Backrounds/FishyFishyUnderwater")
 				underwaterBackroundSprite = spr.new(underwaterBackround)
 				underwaterBackroundSprite:moveTo(200, 1200)
