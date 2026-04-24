@@ -79,7 +79,7 @@ Fishys = {
 	Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Legendary-Octopus", sellGifPath = "assets/Animations/octopus", catchDificulty = "9", priceMin = "16", priceMax = "25" },      --Legendary
 	Angler = { probability = 4 / 100, imgPath = "assets/Fish/Mythical-Angler", sellGifPath = "assets/Animations/angler", catchDificulty = "11", priceMin = "23", priceMax = "31" },          --Mythical
 	Jellyfish = { probability = 2 / 100, imgPath = "assets/Fish/Insane-Jellyfish", sellGifPath = "assets/Animations/jellyfish", catchDificulty = "14", priceMin = "29", priceMax = "37" },   --Insane
-	Shark = { probability = 10000 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "assets/Animations/shark", catchDificulty = "17", priceMin = "35", priceMax = "43" },      --Unknown
+	Shark = { probability = 1 / 100, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "assets/Animations/shark", catchDificulty = "17", priceMin = "35", priceMax = "43" },      --Unknown
 	SpongeBOB = { probability = 1 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "", priceMin = "100000", catchDificulty = "30", priceMax = "1000000" },                    --Unknown
 }
 
@@ -224,16 +224,17 @@ function catchFishMiniGame(fish, difficulty)
 			buttonSprite:moveTo(fish.x - randomXoffset, fish.y + randomYoffset)
 		end
 
-		-- Wait for the correct button to be pressed before moving only
 		local currentScale = 1
-		timeLimit = playdate.timer.new(5000, function()
+		-- time limit to catch the fish
+		timeLimit = playdate.timer.new(3000, function()
+				-- runs when timer is out 
 				timeLimit = nil
 				buttonCheckTimer:remove()
 				buttonCheckTimer = nil
 				buttonSprite:remove()
 				buttonSprite = nil
 				currentMinigameFish = nil
-				print("time ran out")
+				-- repeats to animate fish swimming away
 				swimAway = playdate.timer.keyRepeatTimerWithDelay(20, 20, function ()
 				if swimAway then
 					if currentScale <= 0 then
@@ -291,7 +292,7 @@ function catchFishMiniGame(fish, difficulty)
 				correctButtonPressed = false
 			end
 		end
-
+		-- continuously check if the correct button has been pressed
 		buttonCheckTimer = playdate.timer.keyRepeatTimerWithDelay(2, 2, waitForButton)
 end
 
@@ -433,7 +434,7 @@ function setupGame()
 		-- Create sprites from images
 		fishingHookSprite = spr.new(fishingHook)
 		local width, height = fishingHookSprite:getSize()
-		fishingHookSprite:setCollideRect(2.5, 187.5, width - 5, 50)
+		fishingHookSprite:setCollideRect(2.5, 212.5, width - 5, 25)
 		fishingHookSprite.collisionResponse = spr.kCollisionTypeOverlap
 		fishingHookSprite:setGroups(1)
 		fishingHookSprite:setCollidesWithGroups(2)
@@ -448,7 +449,7 @@ function setupGame()
 		underwaterBackroundSprite:add()
 
 		local randomFishcount = math.random(10, 20)
-		spawnFish(100)
+		spawnFish(randomFishcount)
 		print("Spawned: " .. randomFishcount .. " fish")
 	end
 	print("all sprites loaded")
@@ -513,16 +514,16 @@ function playdate.update()
 			if pauseGame == false then
 				-- Move hook with arrow keys
 				if playdate.buttonIsPressed(playdate.kButtonRight) then
-					fishingHookSprite:moveWithCollisions(fishingHookSprite.x + 5, 50)
+					fishingHookSprite:moveWithCollisions(fishingHookSprite.x + 5, fishingHookSprite.y)
 				elseif playdate.buttonIsPressed(playdate.kButtonLeft) then
-					fishingHookSprite:moveWithCollisions(fishingHookSprite.x - 5, 50)
+					fishingHookSprite:moveWithCollisions(fishingHookSprite.x - 5, fishingHookSprite.y)
 				end
 
 				--Limits hook going off screen
 				if fishingHookSprite.x >= 375 then
-					fishingHookSprite:moveWithCollisions(374, 50)
+					fishingHookSprite:moveWithCollisions(374, fishingHookSprite.y)
 				elseif fishingHookSprite.x <= 25 then
-					fishingHookSprite:moveWithCollisions(26, 50)
+					fishingHookSprite:moveWithCollisions(26, fishingHookSprite.y)
 				end
 
 				--Check for collission with fishingHookSprite
