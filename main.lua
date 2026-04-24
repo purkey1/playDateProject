@@ -73,14 +73,28 @@ Buttons = {
 
 -- fish raritys
 Fishys = {
-	Cod = { probability = 50 / 100, imgPath = "assets/Fish/Common-Cod", sellGifPath = "assets/Animations/cod", catchDificulty = "2", priceMin = "1", priceMax = "6" },                      --Common
-	Clownfish = { probability = 20 / 100, imgPath = "assets/Fish/Rare-Clownfish", sellGifPath = "assets/Animations/clownfish", catchDificulty = "4", priceMin = "4", priceMax = "12" },     --Rare
-	Pufferfish = { probability = 15 / 100, imgPath = "assets/Fish/Epic-Pufferfish", sellGifPath = "assets/Animations/pufferfish", catchDificulty = "7", priceMin = "10", priceMax = "18" }, --Epic
-	Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Legendary-Octopus", sellGifPath = "assets/Animations/octopus", catchDificulty = "9", priceMin = "16", priceMax = "25" },      --Legendary
-	Angler = { probability = 4 / 100, imgPath = "assets/Fish/Mythical-Angler", sellGifPath = "assets/Animations/angler", catchDificulty = "11", priceMin = "23", priceMax = "31" },          --Mythical
-	Jellyfish = { probability = 2 / 100, imgPath = "assets/Fish/Insane-Jellyfish", sellGifPath = "assets/Animations/jellyfish", catchDificulty = "14", priceMin = "29", priceMax = "37" },   --Insane
-	Shark = { probability = 1 / 100, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "assets/Animations/shark", catchDificulty = "17", priceMin = "35", priceMax = "43" },      --Unknown
-	SpongeBOB = { probability = 1 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "", priceMin = "100000", catchDificulty = "30", priceMax = "1000000" },                    --Unknown
+	Common = {
+		Cod = { probability = 50 / 100, imgPath = "assets/Fish/Common-Cod", sellGifPath = "assets/Animations/cod", catchDificulty = "2", priceMin = "1", priceMax = "6" },                      --Common
+	},
+	Rare = {
+		Clownfish = { probability = 20 / 100, imgPath = "assets/Fish/Rare-Clownfish", sellGifPath = "assets/Animations/clownfish", catchDificulty = "4", priceMin = "4", priceMax = "12" },     --Rare
+	},
+	Epic = {
+		Pufferfish = { probability = 15 / 100, imgPath = "assets/Fish/Epic-Pufferfish", sellGifPath = "assets/Animations/pufferfish", catchDificulty = "7", priceMin = "10", priceMax = "18" }, --Epic
+	},
+	Legendary = {
+		Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Legendary-Octopus", sellGifPath = "assets/Animations/octopus", catchDificulty = "9", priceMin = "16", priceMax = "25" },      --Legendary
+	},
+	Mythical = {
+		Angler = { probability = 4 / 100, imgPath = "assets/Fish/Mythical-Angler", sellGifPath = "assets/Animations/angler", catchDificulty = "11", priceMin = "23", priceMax = "31" },          --Mythical
+	},
+	Insane =  {
+		Jellyfish = { probability = 2 / 100, imgPath = "assets/Fish/Insane-Jellyfish", sellGifPath = "assets/Animations/jellyfish", catchDificulty = "14", priceMin = "29", priceMax = "37" },   --Insane
+	},
+	Unknown = {
+		Shark = { probability = 1 / 100, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "assets/Animations/shark", catchDificulty = "17", priceMin = "35", priceMax = "43" },      --Unknown
+		SpongeBOB = { probability = 1 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "", priceMin = "100000", catchDificulty = "30", priceMax = "1000000" },                    --Unknown
+	}
 }
 
 local spawnedFish = {}
