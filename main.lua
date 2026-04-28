@@ -74,38 +74,83 @@ Buttons = {
 -- fish raritys
 Fishys = {
 	Common = {
-		Cod = { probability = 50 / 100, imgPath = "assets/Fish/Common-Cod", sellGifPath = "assets/Animations/cod", catchDificulty = "2", priceMin = "1", priceMax = "6" },                      --Common
+		probability = 0.5,
+		fish = {
+			Cod = { probability = 100 / 100, imgPath = "assets/Fish/Common-Cod", sellGifPath = "assets/Animations/cod", catchDificulty = "2", priceMin = "1", priceMax = "6" },
+		}
 	},
+
 	Rare = {
-		Clownfish = { probability = 20 / 100, imgPath = "assets/Fish/Rare-Clownfish", sellGifPath = "assets/Animations/clownfish", catchDificulty = "4", priceMin = "4", priceMax = "12" },     --Rare
+		probability = 0.2,
+		fish = {
+			Clownfish = { probability = 50 / 100, imgPath = "assets/Fish/Rare-Clownfish", sellGifPath = "assets/Animations/clownfish", catchDificulty = "4", priceMin = "4", priceMax = "12" },
+			Bass = { probability = 50 / 100, imgPath = "assets/Fish/Rare-Bass", sellGifPath = "assets/Animations/bass", catchDificulty = "4", priceMin = "4", priceMax = "12" },
+		}
 	},
+
 	Epic = {
-		Pufferfish = { probability = 15 / 100, imgPath = "assets/Fish/Epic-Pufferfish", sellGifPath = "assets/Animations/pufferfish", catchDificulty = "7", priceMin = "10", priceMax = "18" }, --Epic
+		probability = 0.15,
+		fish = {
+			Pufferfish = { probability = 34 / 100, imgPath = "assets/Fish/Epic-Pufferfish", sellGifPath = "assets/Animations/pufferfish", catchDificulty = "7", priceMin = "10", priceMax = "18" },
+			MoorishIdol = { probability = 33 / 100, imgPath = "assets/Fish/Epic-MoorishIdol", sellGifPath = "assets/Animations/moorishIdol", catchDificulty = "7", priceMin = "10", priceMax = "18" },
+			Crab = { probability = 33 / 100, imgPath = "assets/Fish/Epic-Crab", sellGifPath = "assets/Animations/crab", catchDificulty = "7", priceMin = "10", priceMax = "18" },
+		}
 	},
+
 	Legendary = {
-		Octopus = { probability = 8 / 100, imgPath = "assets/Fish/Legendary-Octopus", sellGifPath = "assets/Animations/octopus", catchDificulty = "9", priceMin = "16", priceMax = "25" },      --Legendary
+		probability = 0.08,
+		fish = {
+			Octopus = { probability = 50 / 100, imgPath = "assets/Fish/Legendary-Octopus", sellGifPath = "assets/Animations/octopus", catchDificulty = "9", priceMin = "16", priceMax = "25" },
+			Seahorse = { probability = 50 / 100, imgPath = "assets/Fish/Legendary-Seahorse", sellGifPath = "assets/Animations/seahorse", catchDificulty = "9", priceMin = "16", priceMax = "25" },
+		}
 	},
+
 	Mythical = {
-		Angler = { probability = 4 / 100, imgPath = "assets/Fish/Mythical-Angler", sellGifPath = "assets/Animations/angler", catchDificulty = "11", priceMin = "23", priceMax = "31" },          --Mythical
+		probability = 0.04,
+		fish = {
+			Angler = { probability = 100 / 100, imgPath = "assets/Fish/Mythical-Angler", sellGifPath = "assets/Animations/angler", catchDificulty = "11", priceMin = "23", priceMax = "31" },
+		}
 	},
+
 	Insane =  {
-		Jellyfish = { probability = 2 / 100, imgPath = "assets/Fish/Insane-Jellyfish", sellGifPath = "assets/Animations/jellyfish", catchDificulty = "14", priceMin = "29", priceMax = "37" },   --Insane
+		probability = 0.02,
+		fish = {
+			Jellyfish = { probability = 100 / 100, imgPath = "assets/Fish/Insane-Jellyfish", sellGifPath = "assets/Animations/jellyfish", catchDificulty = "14", priceMin = "29", priceMax = "37" },
+		}
 	},
+
 	Unknown = {
-		Shark = { probability = 1 / 100, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "assets/Animations/shark", catchDificulty = "17", priceMin = "35", priceMax = "43" },      --Unknown
-		SpongeBOB = { probability = 1 / 1000000, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "", priceMin = "100000", catchDificulty = "30", priceMax = "1000000" },                    --Unknown
+		probability = 0.01,
+		fish = {
+			Shark = { probability = 99 / 100, imgPath = "assets/Fish/Unknown-Shark", sellGifPath = "assets/Animations/shark", catchDificulty = "17", priceMin = "35", priceMax = "43" },
+			SpongeBOB = { probability = 1 / 100, imgPath = "assets/Fish/Unknown-Spongebob", sellGifPath = "assets/Animations/spongebob", priceMin = "100000", catchDificulty = "30", priceMax = "1000000" },
+		}
 	}
 }
 
 local spawnedFish = {}
 
+
 function getRandomFish()
+	local rarityChance = math.random()
+	local rarityTotal = 0
 	local chance = math.random()
 	local total = 0
-	for fish, data in pairs(Fishys) do
+
+	local fishRarity = nil
+
+	for rarity, rarityData in pairs(Fishys) do
+		rarityTotal += rarityData.probability
+		if rarityChance <= rarityTotal then
+			fishRarity = rarityData
+		end
+	end
+
+	local fishOptions = fishRarity.fish
+	for fish, data in pairs(fishOptions) do
 		total += data.probability
 		if chance <= total then
-			return fish
+			return data
 		end
 	end
 end
@@ -113,11 +158,11 @@ end
 function spawnFish(count)
 	for num = 1, count do
 		--get fish info
-		local fishName = getRandomFish()
-		local fishData = Fishys[fishName]
+		local fishData = getRandomFish()
 		local fishImg = gfx.image.new(fishData.imgPath)
 		fishSprite = spr.new(fishImg)
-		fishSprite.name = fishName
+		fishSprite.data = fishData
+		fishSprite.data.name = fishData.name
 		--set center
 		local width, height = fishSprite:getSize()
 		fishSprite:setCenter(0.5, 0.5)
@@ -143,7 +188,7 @@ function spawnFish(count)
 		end
 
 		fishSprite:add()
-		if fishName == "SpongeBOB" then
+		if fishData.name == "SpongeBOB" then
 			print("SpongeBOB has spawned")
 		end
 		table.insert(spawnedFish, fishSprite)
@@ -163,8 +208,7 @@ function collissionCheck()
 			else
 				if currentMinigameFish == nil then
 					currentMinigameFish = fish
-					local fishData = Fishys[fish.name]
-					local difficulty = tonumber(fishData.catchDificulty)
+					local difficulty = tonumber(fish.data.catchDificulty)
 					catchFishMiniGame(fish, difficulty)
 				end
 			end
@@ -297,7 +341,7 @@ function catchFishMiniGame(fish, difficulty)
 							fishHooked:setCollideRect(0, 0, fishHooked:getSize())
 						end
 					else
-						print(timesCompleated)
+						print("Correct button pressed! Number of presses: " .. timesCompleated)
 						catchFishMiniGame(fish, difficulty)
 					end
 					return
@@ -374,10 +418,13 @@ end
 
 function sellAnimation()
 	if sellAnimationDone == false then
-		local sellingFish = Fishys[soldFish.name]
-		local files = playdate.file.listFiles(sellingFish.sellGifPath)
+		local files = playdate.file.listFiles(soldFish.data.sellGifPath)
+		if files == nil then
+			print("An error occured while trying to fetch sell animation path. Check to make sure the path and files exist.")
+		end
 		gfx.sprite.removeAll()
-		local sellAnimationFrame = gfx.image.new(sellingFish.sellGifPath .. "/animation" .. string.upper(soldFish.name) .. sellAnimationIndex)
+		printTable(soldFish)
+		local sellAnimationFrame = gfx.image.new(soldFish.data.sellGifPath .. "/animation" .. string.upper(soldFish.name) .. sellAnimationIndex)
 		sellAnimationSprite = spr.new(sellAnimationFrame)
 		sellAnimationSprite:moveTo(200, 120)
 		sellAnimationSprite:add()
@@ -413,11 +460,10 @@ function sellAnimation()
 end
 
 function sellFish()
-	local sellingFish = Fishys[soldFish.name]
 	local coinSound = sound.fileplayer.new("assets/Audio/coins")
 	coinSound:setVolume(0.75)
 	coinSound:play()
-	local sellPrice = math.random(sellingFish.priceMin, sellingFish.priceMax)
+	local sellPrice = math.random(soldFish.data.priceMin, soldFish.data.priceMax)
 	balance += sellPrice
 end
 
@@ -477,7 +523,7 @@ function buttonCheck()
 			fishHooked:setCollideRect(0, 0, fishHooked:getSize())
 			fishPreviouslyHooked = fishHooked
 			fishHooked = nil
-			print("fish off")
+			print("fish realeased from the hook")
 		end
 	else
 		if playdate.buttonJustPressed("down") then
