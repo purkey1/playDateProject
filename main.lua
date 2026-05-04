@@ -24,13 +24,16 @@ local balanceTextSprite = nil
 local buttonSprite = nil
 
 -- Sound
+local abovewaterMusic = nil
 local underwaterMusic = nil
 local bubblesSound = nil
+local windSound = nil
 
 --Fish
 local fishSprite = nil
 local fishHooked = nil
 local fishPreviouslyHooked = nil
+local fishRarity = nil
 
 -- variables for crank pos
 local crankChange = 0
@@ -70,8 +73,8 @@ Buttons = {
 	Right = { rotation = 90, name = "Right" },
 }
 
-
 -- fish raritys
+local NoFish = { probability = 0 / 1, sellGifPath = "assets/Animations/NoFish", priceMin = "0", priceMax = "0" }
 Fishys = {
 	Common = {
 		probability = 0.5,
@@ -132,39 +135,41 @@ local spawnedFish = {}
 
 
 function getRandomFish()
+	-- Random probability for rarity selection
 	local rarityChance = math.random()
 	local rarityTotal = 0
+
+	-- Random probability for fish selection
 	local chance = math.random()
 	local total = 0
 
-	local fishRarity = nil
-
+	-- Selects the rarity from the Fishys table and gets the data from it ( All the lines inbetween "fish = {" and "}" )
 	for rarity, rarityData in pairs(Fishys) do
 		rarityTotal += rarityData.probability
 		if rarityChance <= rarityTotal then
-			fishRarity = rarityData
-		end
-	end
 
-	local fishOptions = fishRarity.fish
-	for fish, data in pairs(fishOptions) do
-		total += data.probability
-		if chance <= total then
-			return data
+			--Selects the fish from the selected table inside of the Fishys table then returns it to the spawnFish function
+			for fish, data in pairs(rarityData.fish) do
+				total += data.probability
+				if chance <= total then
+					return data, fish
+				end
+			end
+
 		end
-	end
+	end	
 end
 
 function spawnFish(count)
 	for num = 1, count do
-		--get fish info
-		local fishData = getRandomFish()
+		--get random fish and its info
+		local fishData, fishName = getRandomFish()
+		--creates the sprite
 		local fishImg = gfx.image.new(fishData.imgPath)
 		fishSprite = spr.new(fishImg)
 		fishSprite.data = fishData
-		fishSprite.data.name = fishData.name
+		fishSprite.data.name = fishName
 		--set center
-		local width, height = fishSprite:getSize()
 		fishSprite:setCenter(0.5, 0.5)
 		--add collission
 		fishSprite:setCollideRect(0, 0, fishSprite:getSize())
@@ -180,13 +185,13 @@ function spawnFish(count)
 		fishSprite.speed = fishSprite.speedX
 		--flip the image to make it face the correct way
 		fishSprite:setImageFlip(gfx.kImageFlippedX)
-		--coinflip fish direction
+		--random fish  swimming direction
 		local direction = math.random()
 		if direction > 0.5 then
 			fishSprite.speedX = -fishSprite.speedX
 			fishSprite:setImageFlip(gfx.kImageUnflipped)
 		end
-
+		-- finish adding the fish
 		fishSprite:add()
 		if fishData.name == "SpongeBOB" then
 			print("SpongeBOB has spawned")
@@ -196,18 +201,23 @@ function spawnFish(count)
 end
 
 function collissionCheck()
+	-- if a fish is already on the hook return in order to not allow 2 fish on the hook at once
 	if fishHooked then
 		return
 	end
+	-- goes through each fish in the spawnedFish table checking if any of them are overlapping with the fishing hook collission rect
 	for _, fish in pairs(spawnedFish) do
-		--local overlappingSprites = spr.allOverlappingSprites()
 		local overlappingSprites = fish:overlappingSprites()
+		-- if the number of overlapping sprites are greater or equal to one, continue
 		if #overlappingSprites >= 1 then
+			--checks if the fish colliding with currently was just released from the hook to prevent not being able to relese the fish
 			if fish == fishPreviouslyHooked then
 				return
 			else
+				-- checks if the player is already attempting to catch a fish through the minigame (Prevents errors when multiple fish are overlapping the fishing hook rect when checked)
 				if currentMinigameFish == nil then
 					currentMinigameFish = fish
+					-- gets the number of times you need to press the correct button and sets it as the difficulty
 					local difficulty = tonumber(fish.data.catchDificulty)
 					catchFishMiniGame(fish, difficulty)
 				end
@@ -335,7 +345,8 @@ function catchFishMiniGame(fish, difficulty)
 							timesCompleated = 0
 							fishHooked = fish
 							fishHooked.speedX = 0
-							if fish.name ~= "Jellyfish" then
+
+							if width > height then
 								fishHooked:setRotation(90)
 							end
 							fishHooked:setCollideRect(0, 0, fishHooked:getSize())
@@ -358,8 +369,12 @@ function fadeAnimation()
 	playdate.display.setRefreshRate(10)
 	gfx.setColor(gfx.kColorBlack)
 	gfx.sprite.removeAll()
+	windSound = sound.fileplayer.new("assets/Audio/wind")
+	windSound:setVolume(0)
+	windSound:play()
 	if aboveWater == true then
 			if fadeAnimationSection == 1 then
+				print("AGEJSGNSIEFNSEIFNSEIFNESIF")
 				-- when fadeAnimationSection is equal to 1 it goes through this 
 				-- untill the fadeAnimationIndex is less than 0 once it is
 				-- it changes fadeAnimationSection equal to 2, which skips the first part and runs the else statement below
@@ -368,17 +383,22 @@ function fadeAnimation()
 				underwaterBackroundSprite:moveTo(200, 1200)
 				underwaterBackroundSprite:add()
 				gfx.setDitherPattern(fadeAnimationIndex)
+				print(fadeAnimationIndex)
+				windSound:setVolume(1 - fadeAnimationIndex)
 				gfx.fillRect(0, 0, 400, 240)
 				fadeAnimationIndex -= 0.09
 				if fadeAnimationIndex <= 0 then
 					fadeAnimationSection = 2
 				end
 			else
+				print("vsdsdvsdv")
 				local sellBackround = gfx.image.new("assets/Backrounds/frame1BASE")
 				aboveWaterBackroundSprite = spr.new(sellBackround)
 				aboveWaterBackroundSprite:moveTo(200, 120)
 				aboveWaterBackroundSprite:add()
 				gfx.setDitherPattern(fadeAnimationIndex)
+				print(fadeAnimationIndex)
+				windSound:setVolume(1 - fadeAnimationIndex)
 				gfx.fillRect(0, 0, 400, 240)
 				fadeAnimationIndex += 0.09
 			end
@@ -392,6 +412,8 @@ function fadeAnimation()
 			aboveWaterBackroundSprite:moveTo(200, 120)
 			aboveWaterBackroundSprite:add()
 			gfx.setDitherPattern(fadeAnimationIndex)
+			print(fadeAnimationIndex)
+			windSound:setVolume(1 - fadeAnimationIndex)
 			gfx.fillRect(0, 0, 400, 240)
 			fadeAnimationIndex -= 0.09
 			if fadeAnimationIndex <= 0 then
@@ -403,15 +425,18 @@ function fadeAnimation()
 			underwaterBackroundSprite:moveTo(200, 1200)
 			underwaterBackroundSprite:add()
 			gfx.setDitherPattern(fadeAnimationIndex)
+			print(fadeAnimationIndex)
+			windSound:setVolume(1 - fadeAnimationIndex)
 			gfx.fillRect(0, 0, 400, 240)
 			fadeAnimationIndex += 0.09
 		end
 	end
 	if fadeAnimationIndex > 1 then
+		windSound:pause()
 		fadeAnimationDone = true
 		aboveWaterBackroundSprite = nil
 		underwaterBackroundSprite = nil
-		gfx.sprite.removeAll()
+		--gfx.sprite.removeAll()
 		setupGame()
 	end
 end
@@ -423,8 +448,7 @@ function sellAnimation()
 			print("An error occured while trying to fetch sell animation path. Check to make sure the path and files exist.")
 		end
 		gfx.sprite.removeAll()
-		printTable(soldFish)
-		local sellAnimationFrame = gfx.image.new(soldFish.data.sellGifPath .. "/animation" .. string.upper(soldFish.name) .. sellAnimationIndex)
+		local sellAnimationFrame = gfx.image.new(soldFish.data.sellGifPath .. "/animation" .. string.upper(soldFish.data.name) .. sellAnimationIndex)
 		sellAnimationSprite = spr.new(sellAnimationFrame)
 		sellAnimationSprite:moveTo(200, 120)
 		sellAnimationSprite:add()
@@ -465,15 +489,19 @@ function sellFish()
 	coinSound:play()
 	local sellPrice = math.random(soldFish.data.priceMin, soldFish.data.priceMax)
 	balance += sellPrice
+	print('selling done')
 end
 
 function setupGame()
-	gfx.clear()
 
 	if aboveWater == true then
 		playdate.display.setRefreshRate(10)
 		underwaterMusic:pause()
 		bubblesSound:pause()
+		windSound:pause()
+		abovewaterMusic = sound.fileplayer.new("assets/Audio/abovewaterMusic")
+		abovewaterMusic:setVolume(0.75)
+		abovewaterMusic:play()
 
 
 	end
@@ -484,7 +512,10 @@ function setupGame()
 		local underWaterBackround = gfx.image.new("assets/Backrounds/FishyFishyUnderwater")
 		local fishingHook = gfx.image.new("assets/Misc/fishhook")
 
-		-- load and play music/sounds
+		-- pause, load and play music/sounds
+		if abovewaterMusic then
+			abovewaterMusic:pause()
+		end
 		underwaterMusic = sound.fileplayer.new("assets/Audio/underwaterMusic")
 		bubblesSound = sound.fileplayer.new("assets/Audio/bubbles")
 		underwaterMusic:play()
