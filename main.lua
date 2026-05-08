@@ -74,7 +74,7 @@ Buttons = {
 }
 
 -- fish raritys
-local NoFish = { probability = 0 / 1, sellGifPath = "assets/Animations/NoFish", priceMin = "0", priceMax = "0" }
+local NoFish = { data = { sellGifPath = "assets/Animations/nofish", priceMin = "0", priceMax = "0" }}
 Fishys = {
 	Common = {
 		probability = 0.5,
@@ -384,7 +384,6 @@ function fadeAnimation()
 				underwaterBackroundSprite:add()
 				gfx.setDitherPattern(fadeAnimationIndex)
 				print(fadeAnimationIndex)
-				windSound:setVolume(1 - fadeAnimationIndex)
 				gfx.fillRect(0, 0, 400, 240)
 				fadeAnimationIndex -= 0.09
 				if fadeAnimationIndex <= 0 then
@@ -398,7 +397,6 @@ function fadeAnimation()
 				aboveWaterBackroundSprite:add()
 				gfx.setDitherPattern(fadeAnimationIndex)
 				print(fadeAnimationIndex)
-				windSound:setVolume(1 - fadeAnimationIndex)
 				gfx.fillRect(0, 0, 400, 240)
 				fadeAnimationIndex += 0.09
 			end
@@ -413,7 +411,6 @@ function fadeAnimation()
 			aboveWaterBackroundSprite:add()
 			gfx.setDitherPattern(fadeAnimationIndex)
 			print(fadeAnimationIndex)
-			windSound:setVolume(1 - fadeAnimationIndex)
 			gfx.fillRect(0, 0, 400, 240)
 			fadeAnimationIndex -= 0.09
 			if fadeAnimationIndex <= 0 then
@@ -426,7 +423,6 @@ function fadeAnimation()
 			underwaterBackroundSprite:add()
 			gfx.setDitherPattern(fadeAnimationIndex)
 			print(fadeAnimationIndex)
-			windSound:setVolume(1 - fadeAnimationIndex)
 			gfx.fillRect(0, 0, 400, 240)
 			fadeAnimationIndex += 0.09
 		end
@@ -443,6 +439,7 @@ end
 
 function sellAnimation()
 	if sellAnimationDone == false then
+		
 		local files = playdate.file.listFiles(soldFish.data.sellGifPath)
 		if files == nil then
 			print("An error occured while trying to fetch sell animation path. Check to make sure the path and files exist.")
@@ -452,7 +449,11 @@ function sellAnimation()
 		sellAnimationSprite = spr.new(sellAnimationFrame)
 		sellAnimationSprite:moveTo(200, 120)
 		sellAnimationSprite:add()
-		if #files == sellAnimationIndex then
+		if #files == sellAnimationIndex and soldFish.data.name == "NoFish" then
+			coinAnimationDone = true
+			sellAnimationDone = true
+			sellAnimationIndex = 1
+		elseif #files == sellAnimationIndex then
 			sellAnimationDone = true
 			sellAnimationIndex = 1
 		end
@@ -587,6 +588,7 @@ function playdate.update()
 		if fadeAnimationDone == false then
 			gfx.sprite.update()
 			fadeAnimation()
+			windSound:setVolume(1 - fadeAnimationIndex)
 		elseif coinAnimationDone == false then
 			sellAnimation()
 			gfx.sprite.update()
@@ -601,6 +603,7 @@ function playdate.update()
 		if fadeAnimationDone == false then
 			gfx.sprite.update()
 			fadeAnimation()
+			windSound:setVolume(1 - fadeAnimationIndex)
 		else
 			if pauseGame == false then
 				-- Move hook with arrow keys
@@ -696,7 +699,11 @@ function playdate.update()
 				end
 				
 				-- checks for selling
-				if underwaterBackroundSprite.y >= 1199 and fishHooked then
+				if underwaterBackroundSprite.y >= 1199 then
+					if fishHooked == nil then
+						fishHooked = NoFish
+						fishHooked.data.name = "NoFish"
+					end
 					soldFish = fishHooked
 					fishHooked = nil
 					underwaterMusic:pause()
