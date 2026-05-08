@@ -28,6 +28,7 @@ local abovewaterMusic = nil
 local underwaterMusic = nil
 local bubblesSound = nil
 local windSound = nil
+local waterSplashSound = nil
 
 --Fish
 local fishSprite = nil
@@ -365,16 +366,23 @@ function catchFishMiniGame(fish, difficulty)
 		buttonCheckTimer = playdate.timer.keyRepeatTimerWithDelay(2, 2, waitForButton)
 end
 
+
+function startFadeAnimation()
+	windSound = sound.fileplayer.new("assets/Audio/wind")
+	windSound:setVolume(0)
+	windSound:play()
+	abovewaterMusic = sound.fileplayer.new("assets/Audio/abovewaterMusic")
+	abovewaterMusic:setVolume(0.75)
+	abovewaterMusic:play()
+	fadeAnimation()
+end
+
 function fadeAnimation()
 	playdate.display.setRefreshRate(10)
 	gfx.setColor(gfx.kColorBlack)
 	gfx.sprite.removeAll()
-	windSound = sound.fileplayer.new("assets/Audio/wind")
-	windSound:setVolume(0)
-	windSound:play()
 	if aboveWater == true then
 			if fadeAnimationSection == 1 then
-				print("AGEJSGNSIEFNSEIFNSEIFNESIF")
 				-- when fadeAnimationSection is equal to 1 it goes through this 
 				-- untill the fadeAnimationIndex is less than 0 once it is
 				-- it changes fadeAnimationSection equal to 2, which skips the first part and runs the else statement below
@@ -383,20 +391,23 @@ function fadeAnimation()
 				underwaterBackroundSprite:moveTo(200, 1200)
 				underwaterBackroundSprite:add()
 				gfx.setDitherPattern(fadeAnimationIndex)
-				print(fadeAnimationIndex)
+				underwaterMusic:setVolume(fadeAnimationIndex)
 				gfx.fillRect(0, 0, 400, 240)
 				fadeAnimationIndex -= 0.09
 				if fadeAnimationIndex <= 0 then
 					fadeAnimationSection = 2
 				end
 			else
-				print("vsdsdvsdv")
 				local sellBackround = gfx.image.new("assets/Backrounds/frame1BASE")
 				aboveWaterBackroundSprite = spr.new(sellBackround)
 				aboveWaterBackroundSprite:moveTo(200, 120)
 				aboveWaterBackroundSprite:add()
 				gfx.setDitherPattern(fadeAnimationIndex)
-				print(fadeAnimationIndex)
+				if fadeAnimationIndex < 0.75 then
+					abovewaterMusic:setVolume(fadeAnimationIndex)
+				else
+					abovewaterMusic:setVolume(0.75)
+				end
 				gfx.fillRect(0, 0, 400, 240)
 				fadeAnimationIndex += 0.09
 			end
@@ -410,7 +421,11 @@ function fadeAnimation()
 			aboveWaterBackroundSprite:moveTo(200, 120)
 			aboveWaterBackroundSprite:add()
 			gfx.setDitherPattern(fadeAnimationIndex)
-			print(fadeAnimationIndex)
+			if fadeAnimationIndex < 0.75 then
+				abovewaterMusic:setVolume(fadeAnimationIndex)
+			else
+				abovewaterMusic:setVolume(0.75)
+			end
 			gfx.fillRect(0, 0, 400, 240)
 			fadeAnimationIndex -= 0.09
 			if fadeAnimationIndex <= 0 then
@@ -422,13 +437,13 @@ function fadeAnimation()
 			underwaterBackroundSprite:moveTo(200, 1200)
 			underwaterBackroundSprite:add()
 			gfx.setDitherPattern(fadeAnimationIndex)
-			print(fadeAnimationIndex)
+			underwaterMusic:setVolume(fadeAnimationIndex)
 			gfx.fillRect(0, 0, 400, 240)
 			fadeAnimationIndex += 0.09
 		end
 	end
 	if fadeAnimationIndex > 1 then
-		windSound:pause()
+		windSound:stop()
 		fadeAnimationDone = true
 		aboveWaterBackroundSprite = nil
 		underwaterBackroundSprite = nil
@@ -439,7 +454,6 @@ end
 
 function sellAnimation()
 	if sellAnimationDone == false then
-		
 		local files = playdate.file.listFiles(soldFish.data.sellGifPath)
 		if files == nil then
 			print("An error occured while trying to fetch sell animation path. Check to make sure the path and files exist.")
@@ -449,6 +463,12 @@ function sellAnimation()
 		sellAnimationSprite = spr.new(sellAnimationFrame)
 		sellAnimationSprite:moveTo(200, 120)
 		sellAnimationSprite:add()
+
+		if sellAnimationIndex == 20 and soldFish.data.name ~= "NoFish" then
+			waterSplashSound = sound.fileplayer.new("assets/Audio/waterSplash")
+			waterSplashSound:setVolume(0.3)
+			waterSplashSound:play()
+		end
 		if #files == sellAnimationIndex and soldFish.data.name == "NoFish" then
 			coinAnimationDone = true
 			sellAnimationDone = true
@@ -500,11 +520,6 @@ function setupGame()
 		underwaterMusic:pause()
 		bubblesSound:pause()
 		windSound:pause()
-		abovewaterMusic = sound.fileplayer.new("assets/Audio/abovewaterMusic")
-		abovewaterMusic:setVolume(0.75)
-		abovewaterMusic:play()
-
-
 	end
 
 	if underWater == true then
@@ -570,7 +585,7 @@ function buttonCheck()
 			coinAnimationDone = false
 			aboveWater = false
 			underWater = true
-			fadeAnimation()
+			startFadeAnimation()
 		end
 	end
 end
@@ -588,7 +603,12 @@ function playdate.update()
 		if fadeAnimationDone == false then
 			gfx.sprite.update()
 			fadeAnimation()
-			windSound:setVolume(1 - fadeAnimationIndex)
+			if fadeAnimationIndex > 0.25 then
+				windSound:setVolume(1 - fadeAnimationIndex)
+			else
+				windSound:setVolume(0.75)
+			end
+
 		elseif coinAnimationDone == false then
 			sellAnimation()
 			gfx.sprite.update()
@@ -603,7 +623,11 @@ function playdate.update()
 		if fadeAnimationDone == false then
 			gfx.sprite.update()
 			fadeAnimation()
-			windSound:setVolume(1 - fadeAnimationIndex)
+			if fadeAnimationIndex > 0.25 then
+				windSound:setVolume(1 - fadeAnimationIndex)
+			else
+				windSound:setVolume(0.75)
+			end
 		else
 			if pauseGame == false then
 				-- Move hook with arrow keys
@@ -706,13 +730,12 @@ function playdate.update()
 					end
 					soldFish = fishHooked
 					fishHooked = nil
-					underwaterMusic:pause()
 					bubblesSound:pause()
 					underWater = false
 					aboveWater = true
 					fadeAnimationSection = 1
 					fadeAnimationDone = false
-					fadeAnimation()
+					startFadeAnimation()
 				end
 			end
 			-- Update all sprites
