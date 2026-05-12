@@ -17,7 +17,7 @@ local swimAway = nil
 
 -- Variables for our sprites
 local fishingHookSprite = nil
-local underwaterBackroundSprite = nil
+local underwaterBackgroundSprite = nil
 local aboveWaterBackroundSprite = nil
 local sellAnimationSprite = nil
 local balanceTextSprite = nil
@@ -371,9 +371,12 @@ function startFadeAnimation()
 	windSound = sound.fileplayer.new("assets/Audio/wind")
 	windSound:setVolume(0)
 	windSound:play()
-	abovewaterMusic = sound.fileplayer.new("assets/Audio/abovewaterMusic")
-	abovewaterMusic:setVolume(0.75)
-	abovewaterMusic:play()
+	if aboveWater then
+		abovewaterMusic = sound.fileplayer.new("assets/Audio/abovewaterMusic")
+		abovewaterMusic:setVolume(0.75)
+		abovewaterMusic:play()
+	end
+	
 	fadeAnimation()
 end
 
@@ -387,9 +390,9 @@ function fadeAnimation()
 				-- untill the fadeAnimationIndex is less than 0 once it is
 				-- it changes fadeAnimationSection equal to 2, which skips the first part and runs the else statement below
 				local underwaterBackround = gfx.image.new("assets/Backrounds/FishyFishyUnderwater")
-				underwaterBackroundSprite = spr.new(underwaterBackround)
-				underwaterBackroundSprite:moveTo(200, 1200)
-				underwaterBackroundSprite:add()
+				underwaterBackgroundSprite = spr.new(underwaterBackround)
+				underwaterBackgroundSprite:moveTo(200, 1200)
+				underwaterBackgroundSprite:add()
 				gfx.setDitherPattern(fadeAnimationIndex)
 				underwaterMusic:setVolume(fadeAnimationIndex)
 				gfx.fillRect(0, 0, 400, 240)
@@ -433,9 +436,9 @@ function fadeAnimation()
 			end
 		else
 			local underwaterBackround = gfx.image.new("assets/Backrounds/FishyFishyUnderwater")
-			underwaterBackroundSprite = spr.new(underwaterBackround)
-			underwaterBackroundSprite:moveTo(200, 1200)
-			underwaterBackroundSprite:add()
+			underwaterBackgroundSprite = spr.new(underwaterBackround)
+			underwaterBackgroundSprite:moveTo(200, 1200)
+			underwaterBackgroundSprite:add()
 			gfx.setDitherPattern(fadeAnimationIndex)
 			underwaterMusic:setVolume(fadeAnimationIndex)
 			gfx.fillRect(0, 0, 400, 240)
@@ -445,8 +448,10 @@ function fadeAnimation()
 	if fadeAnimationIndex > 1 then
 		windSound:stop()
 		fadeAnimationDone = true
+		aboveWaterBackroundSprite:remove()
 		aboveWaterBackroundSprite = nil
-		underwaterBackroundSprite = nil
+		underwaterBackgroundSprite:remove()
+		underwaterBackgroundSprite = nil
 		--gfx.sprite.removeAll()
 		setupGame()
 	end
@@ -506,7 +511,7 @@ end
 
 function sellFish()
 	local coinSound = sound.fileplayer.new("assets/Audio/coins")
-	coinSound:setVolume(0.75)
+	coinSound:setVolume(0.25)
 	coinSound:play()
 	local sellPrice = math.random(soldFish.data.priceMin, soldFish.data.priceMax)
 	balance += sellPrice
@@ -545,15 +550,15 @@ function setupGame()
 		fishingHookSprite.collisionResponse = spr.kCollisionTypeOverlap
 		fishingHookSprite:setGroups(1)
 		fishingHookSprite:setCollidesWithGroups(2)
-		underwaterBackroundSprite = spr.new(underWaterBackround)
+		underwaterBackgroundSprite = spr.new(underWaterBackround)
 
 		-- Position sprites
 		fishingHookSprite:moveWithCollisions(200, 50)
-		underwaterBackroundSprite:moveTo(200, 1200)
+		underwaterBackgroundSprite:moveTo(200, 1200)
 
 		-- Add sprites to display list (makes them visible)
 		fishingHookSprite:add()
-		underwaterBackroundSprite:add()
+		underwaterBackgroundSprite:add()
 
 		local randomFishcount = math.random(10, 20)
 		spawnFish(randomFishcount)
@@ -653,14 +658,14 @@ function playdate.update()
 				end
 
 				
-				-- scroll underwaterbackround with crank
-				local bgY1 = underwaterBackroundSprite.y
-				underwaterBackroundSprite:moveBy(0, -2 + reeling)
-				local bgY2 = underwaterBackroundSprite.y - bgY1
+				-- scroll underwaterbackground with crank
+				local bgY1 = underwaterBackgroundSprite.y
+				underwaterBackgroundSprite:moveBy(0, -2 + reeling)
+				local bgY2 = underwaterBackgroundSprite.y - bgY1
 
-					--limits scrolling underwaterbackround too far and moves fish with underwaterbackround
-				if underwaterBackroundSprite.y >= 1200 then
-					underwaterBackroundSprite:moveTo(200, 1199)
+					--limits scrolling underwaterbackground too far and moves fish with underwaterbackground
+				if underwaterBackgroundSprite.y >= 1200 then
+					underwaterBackgroundSprite:moveTo(200, 1199)
 					for _, fish in pairs(spawnedFish) do
 						-- Fish swimming left and right with facing the correct direction
 						fish:moveBy(fish.speedX, 0)
@@ -678,8 +683,8 @@ function playdate.update()
 							end
 						end
 					end
-				elseif underwaterBackroundSprite.y <= -960 then
-					underwaterBackroundSprite:moveTo(200, -959)
+				elseif underwaterBackgroundSprite.y <= -960 then
+					underwaterBackgroundSprite:moveTo(200, -959)
 					for _, fish in pairs(spawnedFish) do
 						-- Fish swimming left and right with facing the correct direction
 						fish:moveBy(fish.speedX, 0)
@@ -700,7 +705,7 @@ function playdate.update()
 				else
 					for _, fish in pairs(spawnedFish) do
 						if fishHooked ~= fish then
-							--Keep fish with underwaterBackroundSprite
+							--Keep fish with underwaterBackgroundSprite
 							fish:moveBy(0, bgY2)
 						end
 
@@ -723,7 +728,7 @@ function playdate.update()
 				end
 				
 				-- checks for selling
-				if underwaterBackroundSprite.y >= 1199 then
+				if underwaterBackgroundSprite.y >= 1199 then
 					if fishHooked == nil then
 						fishHooked = NoFish
 						fishHooked.data.name = "NoFish"
