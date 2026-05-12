@@ -29,6 +29,7 @@ local underwaterMusic = nil
 local bubblesSound = nil
 local windSound = nil
 local waterSplashSound = nil
+local popSound = nil
 
 --Fish
 local fishSprite = nil
@@ -63,6 +64,7 @@ local balance = 0
 
 -- catch fish minigame
 local timesCompleated = 0
+local incorrectPresses = 0
 local correctButtonData = nil
 local currentMinigameFish = nil
 local correctButtonPressed = true
@@ -320,6 +322,35 @@ function catchFishMiniGame(fish, difficulty)
 		end)
 
 		local function waitForButton()
+			
+			local current, pressed, released = playdate.getButtonState()
+			if current ~= nil and playdate.buttonJustPressed(string.lower(correctButtonData.name)) == false then
+				print(failed)
+				-- wrong button pressed
+				incorrectPresses += 1
+				if incorrectPresses >= 2 then
+					timeLimit = nil
+					buttonCheckTimer:remove()
+					buttonCheckTimer = nil
+					buttonSprite:remove()
+					buttonSprite = nil
+					currentMinigameFish = nil
+					-- repeats to animate fish swimming away
+					swimAway = playdate.timer.keyRepeatTimerWithDelay(20, 20, function ()
+					if swimAway then
+						if currentScale <= 0 then
+							fish:remove()
+							swimAway:remove()
+							swimAway = nil
+							pauseGame = false
+						end
+					end
+						fish:setScale(currentScale - 0.07, currentScale - 0.07)
+						currentScale -= 0.07
+						fish:setCollideRect(0, 0, fish:getSize())
+					end)
+				end
+			end
 			if playdate.buttonJustPressed(string.lower(correctButtonData.name)) then
 				if correctButtonPressed == false then
 					correctButtonPressed = true
@@ -334,6 +365,10 @@ function catchFishMiniGame(fish, difficulty)
 					timesCompleated += 1
 					buttonSprite:remove()
 					buttonSprite = nil
+
+					popSound = sound.fileplayer.new("assets/Audio/pop")
+					popSound:setVolume(0.5)
+					popSound:play()
 
 					local minigameDone = false
 					if timesCompleated >= difficulty then
@@ -358,6 +393,17 @@ function catchFishMiniGame(fish, difficulty)
 					end
 					return
 				end
+			elseif playdate.buttonJustPressed("Up") then
+				incorrectPresses += 1
+				if incorrectPresses >= 2 then
+					
+				end
+			elseif playdate.buttonJustPressed("Down") then
+
+			elseif playdate.buttonJustPressed("Left") then
+
+			elseif playdate.buttonJustPressed("Right") then
+
 			else
 				correctButtonPressed = false
 			end
