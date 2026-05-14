@@ -563,6 +563,14 @@ end
 
 function setupGame()
 
+	local gameData = playdate.datastore.read()
+	-- If game data has never been saved, the read value will
+	-- be 'nil', so check if the game data exists first
+	if gameData then
+		-- Populate game structures with the saved data
+		balance = gameData.coinBalance
+	end
+
 	if aboveWater == true then
 		playdate.display.setRefreshRate(10)
 		underwaterMusic:pause()
@@ -792,6 +800,27 @@ function playdate.update()
 			gfx.sprite.update()
 		end
 	end
+end
+
+function saveGameData()
+    -- Save game data into a table first
+    local gameData = {
+        coinBalance = balance
+    }
+    -- Serialize game data table into the datastore
+    playdate.datastore.write(gameData)
+end
+
+-- Automatically save game data when the player chooses
+-- to exit the game via the System Menu or Menu button
+function playdate.gameWillTerminate()
+    saveGameData()
+end
+
+-- Automatically save game data when the device goes
+-- to low-power sleep mode because of a low battery
+function playdate.gameWillSleep()
+    saveGameData()
 end
 
 -- Start the game
