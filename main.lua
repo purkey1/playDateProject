@@ -67,7 +67,7 @@ local timesCompleated = 0
 local incorrectPresses = 0
 local correctButtonData = nil
 local currentMinigameFish = nil
-local correctButtonPressed = true
+local buttonPressed = true
 
 Buttons = {
 	Up = { rotation = 0, name = "Up" },
@@ -298,13 +298,16 @@ function catchFishMiniGame(fish, difficulty)
 		local currentScale = 1
 		-- time limit to catch the fish
 		timeLimit = playdate.timer.new(3000, function()
-				-- runs when timer is out 
+				-- runs when timer is out
+				timeLimit:remove()
 				timeLimit = nil
 				buttonCheckTimer:remove()
 				buttonCheckTimer = nil
 				buttonSprite:remove()
 				buttonSprite = nil
 				currentMinigameFish = nil
+				incorrectPresses = 0
+				timesCompleated = 0
 				-- repeats to animate fish swimming away
 				swimAway = playdate.timer.keyRepeatTimerWithDelay(20, 20, function ()
 				if swimAway then
@@ -324,89 +327,83 @@ function catchFishMiniGame(fish, difficulty)
 		local function waitForButton()
 			
 			local current, pressed, released = playdate.getButtonState()
-			if current ~= nil and playdate.buttonJustPressed(string.lower(correctButtonData.name)) == false then
-				print(failed)
-				-- wrong button pressed
-				incorrectPresses += 1
-				if incorrectPresses >= 2 then
-					timeLimit = nil
-					buttonCheckTimer:remove()
-					buttonCheckTimer = nil
-					buttonSprite:remove()
-					buttonSprite = nil
-					currentMinigameFish = nil
-					-- repeats to animate fish swimming away
-					swimAway = playdate.timer.keyRepeatTimerWithDelay(20, 20, function ()
-					if swimAway then
-						if currentScale <= 0 then
-							fish:remove()
-							swimAway:remove()
-							swimAway = nil
-							pauseGame = false
-						end
-					end
-						fish:setScale(currentScale - 0.07, currentScale - 0.07)
-						currentScale -= 0.07
-						fish:setCollideRect(0, 0, fish:getSize())
-					end)
-				end
-			end
-			if playdate.buttonJustPressed(string.lower(correctButtonData.name)) then
-				if correctButtonPressed == false then
-					correctButtonPressed = true
-					if buttonCheckTimer then
-						buttonCheckTimer:remove()
-					end
-					if timeLimit then
+			if buttonPressed == false then
+				if pressed ~= 0 and playdate.buttonJustPressed(string.lower(correctButtonData.name)) == false then
+					buttonPressed = true
+					-- wrong button pressed
+					incorrectPresses += 1
+					print("Incorrect button Pressed - Number of incorrect Presses: " .. incorrectPresses .. " - Fish: " .. fish.data.name)
+					print("number of incorrect presses allowed: " .. fish.data.catchDificulty / 3)
+					if incorrectPresses >= fish.data.catchDificulty / 3 then
 						timeLimit:remove()
-					end
-					buttonCheckTimer = nil
-					timeLimit = nil
-					timesCompleated += 1
-					buttonSprite:remove()
-					buttonSprite = nil
-
-					popSound = sound.fileplayer.new("assets/Audio/pop")
-					popSound:setVolume(0.5)
-					popSound:play()
-
-					local minigameDone = false
-					if timesCompleated >= difficulty then
-						if minigameDone == false then
-							minigameDone = true
-							--finish minigame 
-							
-							currentMinigameFish = nil
-							pauseGame = false
-							timesCompleated = 0
-							fishHooked = fish
-							fishHooked.speedX = 0
-
-							if width > height then
-								fishHooked:setRotation(90)
+						timeLimit = nil
+						buttonCheckTimer:remove()
+						buttonCheckTimer = nil
+						buttonSprite:remove()
+						buttonSprite = nil
+						currentMinigameFish = nil
+						incorrectPresses = 0
+						timesCompleated = 0
+						-- repeats to animate fish swimming away
+						swimAway = playdate.timer.keyRepeatTimerWithDelay(20, 20, function ()
+						if swimAway then
+							if currentScale <= 0 then
+								fish:remove()
+								swimAway:remove()
+								swimAway = nil
+								pauseGame = false
 							end
-							fishHooked:setCollideRect(0, 0, fishHooked:getSize())
 						end
-					else
-						print("Correct button pressed! Number of presses: " .. timesCompleated)
-						catchFishMiniGame(fish, difficulty)
+							fish:setScale(currentScale - 0.07, currentScale - 0.07)
+							currentScale -= 0.07
+							fish:setCollideRect(0, 0, fish:getSize())
+						end)
 					end
-					return
 				end
-			elseif playdate.buttonJustPressed("Up") then
-				incorrectPresses += 1
-				if incorrectPresses >= 2 then
-					
+				if playdate.buttonJustPressed(string.lower(correctButtonData.name)) then
+						buttonPressed = true
+						if buttonCheckTimer then
+							buttonCheckTimer:remove()
+						end
+						if timeLimit then
+							timeLimit:remove()
+						end
+						buttonCheckTimer = nil
+						timeLimit = nil
+						timesCompleated += 1
+						buttonSprite:remove()
+						buttonSprite = nil
+
+						popSound = sound.fileplayer.new("assets/Audio/pop")
+						popSound:setVolume(0.5)
+						popSound:play()
+
+						local minigameDone = false
+						if timesCompleated >= difficulty then
+							if minigameDone == false then
+								minigameDone = true
+								--finish minigame 
+								
+								currentMinigameFish = nil
+								pauseGame = false
+								timesCompleated = 0
+								fishHooked = fish
+								fishHooked.speedX = 0
+
+								if width > height then
+									fishHooked:setRotation(90)
+								end
+								fishHooked:setCollideRect(0, 0, fishHooked:getSize())
+							end
+						else
+							print("Correct button pressed! Number of presses: " .. timesCompleated)
+							catchFishMiniGame(fish, difficulty)
+						end
+						return
+					end
+				else
+					buttonPressed = false
 				end
-			elseif playdate.buttonJustPressed("Down") then
-
-			elseif playdate.buttonJustPressed("Left") then
-
-			elseif playdate.buttonJustPressed("Right") then
-
-			else
-				correctButtonPressed = false
-			end
 		end
 		-- continuously check if the correct button has been pressed
 		buttonCheckTimer = playdate.timer.keyRepeatTimerWithDelay(2, 2, waitForButton)
@@ -620,6 +617,8 @@ function buttonCheck()
 			fishHooked:setRotation(0)
 			fishHooked:setCollideRect(0, 0, fishHooked:getSize())
 			fishPreviouslyHooked = fishHooked
+			incorrectPresses = 0
+			timesCompleated = 0
 			fishHooked = nil
 			print("fish realeased from the hook")
 		end
